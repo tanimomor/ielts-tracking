@@ -7,6 +7,7 @@ import { SkillBadge } from "@/components/skill-icon";
 import { StudentChip } from "@/components/students/student-avatar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { attemptToValues } from "@/lib/attempt-values";
+import { bookLabel, type SeriesInfo } from "@/lib/books";
 import { SKILL_LABELS } from "@/lib/constants";
 import { formatDateLong, formatDateShort } from "@/lib/dates";
 import type { SortKey } from "@/lib/filters";
@@ -23,6 +24,7 @@ type Props = {
   currentStudentId: string;
   today: string;
   tagSuggestions: string[];
+  series: SeriesInfo[];
 };
 
 function groupByDate(rows: AttemptListRow[]) {
@@ -57,7 +59,17 @@ function SortHeader({ k, children, className }: { k: SortKey; children: React.Re
   );
 }
 
-function RowActions({ row, today, tagSuggestions }: { row: AttemptListRow; today: string; tagSuggestions: string[] }) {
+function RowActions({
+  row,
+  today,
+  tagSuggestions,
+  series,
+}: {
+  row: AttemptListRow;
+  today: string;
+  tagSuggestions: string[];
+  series: SeriesInfo[];
+}) {
   const label = `${row.code || SKILL_LABELS[row.skill]} on ${formatDateShort(row.date, today)}`;
   return (
     <div className="flex justify-end gap-0.5">
@@ -67,6 +79,7 @@ function RowActions({ row, today, tagSuggestions }: { row: AttemptListRow; today
         values={attemptToValues(row)}
         maxDate={today}
         tagSuggestions={tagSuggestions}
+        series={series}
       />
       <DeleteAttemptButton id={row.id} label={label} />
     </div>
@@ -86,7 +99,9 @@ function Tags({ tags }: { tags: string[] }) {
   );
 }
 
-export function AttemptsTable({ rows, currentStudentId, today, tagSuggestions }: Props) {
+export function AttemptsTable({ rows, currentStudentId, today, tagSuggestions, series }: Props) {
+  const seriesById = new Map(series.map((s) => [s.id, s]));
+  const label = (r: AttemptListRow) => bookLabel(r.seriesId != null ? seriesById.get(r.seriesId) : null, r.book, r.test, r.part);
   const { filters } = useAttemptFilters();
   const grouped = filters.sort === "date";
   const groups = grouped ? groupByDate(rows) : [{ date: "", rows }];
@@ -140,7 +155,12 @@ export function AttemptsTable({ rows, currentStudentId, today, tagSuggestions }:
                       <TableCell>
                         <SkillBadge skill={r.skill} />
                       </TableCell>
-                      <TableCell className="font-medium">{r.code || <span className="text-muted-foreground">—</span>}</TableCell>
+                      <TableCell className="font-medium" title={label(r) || undefined}>
+                        {r.code || <span className="text-muted-foreground">—</span>}
+                        {r.seriesId != null && r.seriesId !== 1 && (
+                          <span className="block text-xs font-normal text-muted-foreground">{label(r)}</span>
+                        )}
+                      </TableCell>
                       <TableCell className="text-right tabular">{scoreText(r)}</TableCell>
                       <TableCell className="text-right text-muted-foreground tabular">{percentText(r.percent)}</TableCell>
                       <TableCell className="text-right font-semibold tabular">{r.band != null ? formatBand(r.band) : ""}</TableCell>
@@ -152,7 +172,7 @@ export function AttemptsTable({ rows, currentStudentId, today, tagSuggestions }:
                           {r.notes}
                         </p>
                       </TableCell>
-                      <TableCell>{mine && <RowActions row={r} today={today} tagSuggestions={tagSuggestions} />}</TableCell>
+                      <TableCell>{mine && <RowActions row={r} today={today} tagSuggestions={tagSuggestions} series={series} />}</TableCell>
                     </TableRow>
                   );
                 })}
@@ -180,7 +200,9 @@ export function AttemptsTable({ rows, currentStudentId, today, tagSuggestions }:
                     <span aria-hidden className="absolute inset-y-2 left-0 w-[3px] rounded-r" style={{ backgroundColor: r.studentColor }} />
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-medium">{r.code || SKILL_LABELS[r.skill]}</span>
+                        <span className="font-medium" title={label(r) || undefined}>
+                          {r.code || SKILL_LABELS[r.skill]}
+                        </span>
                         <SkillBadge skill={r.skill} />
                       </div>
                       <div className="mt-1 flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
@@ -198,7 +220,7 @@ export function AttemptsTable({ rows, currentStudentId, today, tagSuggestions }:
                     </div>
                     <div className="flex flex-col items-end justify-between">
                       <span className="text-lg font-semibold tabular">{r.band != null ? formatBand(r.band) : ""}</span>
-                      {mine && <RowActions row={r} today={today} tagSuggestions={tagSuggestions} />}
+                      {mine && <RowActions row={r} today={today} tagSuggestions={tagSuggestions} series={series} />}
                     </div>
                   </li>
                 );

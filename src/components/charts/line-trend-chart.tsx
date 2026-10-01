@@ -41,14 +41,14 @@ export function LineTrendChart({
           {target && (
             <ReferenceLine
               y={target.value}
-              stroke="#556070"
+              stroke="var(--chart-ref)"
               strokeDasharray="4 4"
               strokeWidth={1.5}
-              label={{ value: target.label, position: "insideTopRight", fill: "#556070", fontSize: 11 }}
+              label={{ value: target.label, position: "insideTopRight", fill: "var(--chart-ref)", fontSize: 11 }}
             />
           )}
           <Tooltip
-            cursor={{ stroke: "#d0d5dd", strokeWidth: 1 }}
+            cursor={{ stroke: "var(--chart-crosshair)", strokeWidth: 1 }}
             content={(p: TooltipContentProps<ValueType, NameType>) =>
               p.active && p.payload?.length ? (
                 <TooltipBox

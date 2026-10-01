@@ -1,7 +1,11 @@
 import { cn } from "@/lib/utils";
 
 export function PageContainer({ className, ...props }: React.ComponentProps<"div">) {
-  return <div className={cn("mx-auto w-full max-w-6xl px-4 py-6 md:px-8 md:py-10", className)} {...props} />;
+  return (
+    <div className="page-glow min-h-full">
+      <div className={cn("mx-auto w-full max-w-6xl px-4 py-6 md:px-8 md:py-10", className)} {...props} />
+    </div>
+  );
 }
 
 export function PageHeader({

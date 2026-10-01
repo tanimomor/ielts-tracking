@@ -4,13 +4,13 @@ import { Button } from "@/components/ui/button";
 
 export default function NotFound() {
   return (
-    <main className="grid min-h-dvh place-items-center bg-white px-6">
+    <main className="grid min-h-dvh place-items-center bg-background px-6">
       <div className="max-w-sm text-center">
         <BrandMark className="mx-auto size-12 rounded-xl text-base" />
         <h1 className="mt-6 text-2xl font-semibold tracking-tight">Page not found</h1>
         <p className="mt-2 text-sm text-muted-foreground">That page doesn&apos;t exist, or the student was removed.</p>
         <Button asChild className="mt-6">
-          <Link href="/log">Back to logging</Link>
+          <Link href="/dashboard">Back to the dashboard</Link>
         </Button>
       </div>
     </main>

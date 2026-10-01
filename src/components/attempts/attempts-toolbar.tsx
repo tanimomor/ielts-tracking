@@ -17,7 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { SKILLS, SKILL_LABELS, type Skill } from "@/lib/constants";
 import { type DatePreset } from "@/lib/dates";
-import { filtersToParams, hasActiveFilters } from "@/lib/filters";
+import { bookKeyToString, filtersToParams, hasActiveFilters, parseBookKey } from "@/lib/filters";
 import { cn } from "@/lib/utils";
 import { useAttemptFilters } from "./attempts-shell";
 import { TagPicker } from "./tag-picker";
@@ -93,7 +93,7 @@ function FilterControls({
   stacked = false,
 }: {
   students: StudentOpt[];
-  books: number[];
+  books: { value: string; label: string }[];
   tags: string[];
   stacked?: boolean;
 }) {
@@ -184,15 +184,15 @@ function FilterControls({
       )}
       {wrap(
         "Book",
-        <Select value={filters.book ? String(filters.book) : "any"} onValueChange={(v) => update({ book: v === "any" ? null : Number(v) })}>
-          <SelectTrigger id="f-book" className={cn(!stacked && "w-36", filters.book && "border-primary/50 bg-primary-soft/40")} aria-label="Book">
+        <Select value={filters.book ? bookKeyToString(filters.book) : "any"} onValueChange={(v) => update({ book: v === "any" ? null : parseBookKey(v) })}>
+          <SelectTrigger id="f-book" className={cn(!stacked && "w-44", filters.book && "border-primary/50 bg-primary-soft/40")} aria-label="Book">
             <SelectValue />
           </SelectTrigger>
           <SelectContent className="max-h-72">
             <SelectItem value="any">Any book</SelectItem>
             {books.map((b) => (
-              <SelectItem key={b} value={String(b)}>
-                Cambridge {b}
+              <SelectItem key={b.value} value={b.value}>
+                {b.label}
               </SelectItem>
             ))}
           </SelectContent>
@@ -252,7 +252,7 @@ export function AttemptsToolbar({
   total,
 }: {
   students: StudentOpt[];
-  books: number[];
+  books: { value: string; label: string }[];
   tags: string[];
   total: number;
 }) {

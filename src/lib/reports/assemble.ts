@@ -16,7 +16,9 @@ export type RawAggregates = {
   streakDays: { studentId: string; date: string }[];
   books: {
     studentId: string;
-    book: number;
+    series: string;
+    prefix: string;
+    book: number | null;
     test: number | null;
     attempts: number;
     bandSum: number;
@@ -133,8 +135,20 @@ function buildOne(
 
   const bookMap = new Map<string, StudentReport["books"][number] & { bandSum: number; pctSum: number; pctCount: number; banded: number }>();
   for (const b of pick(raw.books)) {
-    const key = `${b.book}:${b.test ?? ""}`;
-    const e = bookMap.get(key) ?? { book: b.book, test: b.test, attempts: 0, avgBand: null, avgPercent: null, bandSum: 0, banded: 0, pctSum: 0, pctCount: 0 };
+    const key = `${b.series}:${b.book ?? ""}:${b.test ?? ""}`;
+    const e = bookMap.get(key) ?? {
+      series: b.series,
+      prefix: b.prefix,
+      book: b.book,
+      test: b.test,
+      attempts: 0,
+      avgBand: null,
+      avgPercent: null,
+      bandSum: 0,
+      banded: 0,
+      pctSum: 0,
+      pctCount: 0,
+    };
     e.attempts += b.attempts;
     e.bandSum += b.bandSum;
     e.banded += b.banded;
@@ -143,14 +157,22 @@ function buildOne(
     bookMap.set(key, e);
   }
   const books = [...bookMap.values()]
-    .map(({ book, test, attempts: n, bandSum, banded, pctSum, pctCount }) => ({
+    .map(({ series, prefix, book, test, attempts: n, bandSum, banded, pctSum, pctCount }) => ({
+      series,
+      prefix,
       book,
       test,
       attempts: n,
       avgBand: avg(bandSum, banded),
       avgPercent: avg(pctSum, pctCount),
     }))
-    .sort((a, b) => b.book - a.book || (a.test ?? 0) - (b.test ?? 0));
+    .sort(
+      (a, b) =>
+        Number(b.prefix === "c") - Number(a.prefix === "c") ||
+        (a.series ?? "").localeCompare(b.series ?? "") ||
+        (b.book ?? 0) - (a.book ?? 0) ||
+        (a.test ?? 0) - (b.test ?? 0),
+    );
 
   const tagMap = new Map<string, number>();
   for (const t of pick(raw.tags)) tagMap.set(t.tag, (tagMap.get(t.tag) ?? 0) + t.count);
@@ -221,7 +243,7 @@ export function assembleReport(
           {
             studentId: null,
             name: "All students",
-            color: "#4338ca",
+            color: "#7c3aed",
             targetBand: targets.size === 1 ? [...targets][0] : null,
           },
           period,

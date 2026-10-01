@@ -38,7 +38,16 @@ export type StudentReport = {
   } | null;
   weeks: WeekPoint[];
   calendar: { date: string; count: number }[];
-  books: { book: number; test: number | null; attempts: number; avgBand: number | null; avgPercent: number | null }[];
+  books: {
+    /** Series name/prefix; missing in snapshots saved before book series existed (= Cambridge). */
+    series?: string;
+    prefix?: string;
+    book: number | null;
+    test: number | null;
+    attempts: number;
+    avgBand: number | null;
+    avgPercent: number | null;
+  }[];
   tags: { tag: string; count: number }[];
   parts: { skill: "listening" | "reading"; part: string; attempts: number; avgPercent: number | null }[];
   lastPractised: Partial<Record<Skill, string>>;

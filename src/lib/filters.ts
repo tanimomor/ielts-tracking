@@ -1,4 +1,5 @@
-import { MAX_BOOK, SKILLS, type Skill } from "./constants";
+import { MAX_VOLUME } from "./books";
+import { SKILLS, type Skill } from "./constants";
 import { DATE_PRESETS, isDateStr, presetRange, today, type DatePreset, type DateRange } from "./dates";
 
 export const SORT_KEYS = ["date", "student", "skill", "code", "score", "percent", "band"] as const;
@@ -6,13 +7,29 @@ export type SortKey = (typeof SORT_KEYS)[number];
 
 export const PAGE_SIZES = [25, 50, 100] as const;
 
+export type BookKey = { seriesId: number; volume: number | null };
+
+/** "1" → all of series 1; "1:17" → series 1, volume 17. */
+export function parseBookKey(v: string | null | undefined): BookKey | null {
+  const m = /^(\d{1,7})(?::(\d{1,3}))?$/.exec(v ?? "");
+  if (!m) return null;
+  const volume = m[2] ? Number(m[2]) : null;
+  if (volume != null && (volume < 1 || volume > MAX_VOLUME)) return null;
+  return { seriesId: Number(m[1]), volume };
+}
+
+export function bookKeyToString(k: BookKey): string {
+  return k.volume == null ? String(k.seriesId) : `${k.seriesId}:${k.volume}`;
+}
+
 export type AttemptFilters = {
   preset: DatePreset;
   from: string | null;
   to: string | null;
   students: string[];
   skills: Skill[];
-  book: number | null;
+  /** A whole series ("Cambridge") or one volume ("Cambridge 17"). */
+  book: BookKey | null;
   tags: string[];
   q: string;
   sort: SortKey;
@@ -59,7 +76,6 @@ export function parseFilters(params: Params): AttemptFilters {
     : DEFAULT_FILTERS.preset;
   const from = get(params, "from");
   const to = get(params, "to");
-  const book = Number(get(params, "book"));
   const sort = get(params, "sort");
   const page = Number(get(params, "page"));
   const size = Number(get(params, "size"));
@@ -69,7 +85,7 @@ export function parseFilters(params: Params): AttemptFilters {
     to: preset === "custom" && isDateStr(to) ? to : null,
     students: list(params, "students").filter((s) => UUID_RE.test(s)),
     skills: list(params, "skills").filter((s): s is Skill => (SKILLS as readonly string[]).includes(s)),
-    book: Number.isInteger(book) && book >= 1 && book <= MAX_BOOK ? book : null,
+    book: parseBookKey(get(params, "book")),
     tags: list(params, "tags").slice(0, 20),
     q: (get(params, "q") ?? "").trim().slice(0, 100),
     sort: (SORT_KEYS as readonly string[]).includes(sort ?? "") ? (sort as SortKey) : DEFAULT_FILTERS.sort,
@@ -91,7 +107,7 @@ export function filtersToParams(f: Partial<AttemptFilters>): URLSearchParams {
   }
   if (f.students?.length) p.set("students", f.students.join(","));
   if (f.skills?.length) p.set("skills", f.skills.join(","));
-  if (f.book != null) p.set("book", String(f.book));
+  if (f.book != null) p.set("book", bookKeyToString(f.book));
   if (f.tags?.length) p.set("tags", f.tags.join(","));
   if (f.q) p.set("q", f.q);
   if (f.sort && f.sort !== d.sort) p.set("sort", f.sort);

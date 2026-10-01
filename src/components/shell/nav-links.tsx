@@ -12,8 +12,8 @@ function isActive(pathname: string, href: string) {
 export function SidebarNav() {
   const pathname = usePathname();
   return (
-    <nav aria-label="Main" className="grid gap-0.5">
-      {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
+    <nav aria-label="Main" className="grid gap-1">
+      {NAV_ITEMS.map(({ href, label, icon: Icon, tint }) => {
         const active = isActive(pathname, href);
         return (
           <Link
@@ -21,11 +21,19 @@ export function SidebarNav() {
             href={href}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-background hover:text-foreground",
-              active && "bg-background text-foreground shadow-xs ring-1 ring-border",
+              "group flex items-center gap-3 rounded-lg px-2 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-background hover:text-foreground",
+              active && "bg-background text-foreground shadow-sm ring-1 ring-border",
             )}
           >
-            <Icon className={cn("size-4", active && "text-primary")} aria-hidden />
+            <span
+              className={cn(
+                "grid size-7 place-items-center rounded-md transition-colors",
+                active ? "text-white shadow-sm" : "bg-background ring-1 ring-border group-hover:ring-transparent",
+              )}
+              style={active ? { backgroundColor: tint } : { color: tint }}
+            >
+              <Icon className="size-4" aria-hidden />
+            </span>
             {label}
           </Link>
         );
@@ -41,8 +49,8 @@ export function BottomTabs() {
       aria-label="Main"
       className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
     >
-      <ul className="grid grid-cols-5">
-        {NAV_ITEMS.filter((i) => i.mobile).map(({ href, label, icon: Icon }) => {
+      <ul className="grid grid-cols-4">
+        {NAV_ITEMS.filter((i) => i.mobile).map(({ href, label, icon: Icon, tint }) => {
           const active = isActive(pathname, href);
           return (
             <li key={href}>
@@ -51,10 +59,15 @@ export function BottomTabs() {
                 aria-current={active ? "page" : undefined}
                 className={cn(
                   "flex h-16 flex-col items-center justify-center gap-1 text-[11px] font-medium text-muted-foreground",
-                  active && "text-primary",
+                  active && "font-semibold text-foreground",
                 )}
               >
-                <Icon className="size-5" aria-hidden />
+                <span
+                  className={cn("grid h-7 w-12 place-items-center rounded-full transition-colors", active && "text-white")}
+                  style={active ? { backgroundColor: tint } : undefined}
+                >
+                  <Icon className="size-5" aria-hidden />
+                </span>
                 {label}
               </Link>
             </li>

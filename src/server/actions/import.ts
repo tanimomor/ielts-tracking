@@ -4,13 +4,14 @@ import { and, eq, gte, lte } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { buildCode, PART_RE } from "@/lib/code";
-import { MAX_BOOK, MAX_TEST, SKILLS } from "@/lib/constants";
+import { MAX_TEST, MAX_VOLUME } from "@/lib/books";
+import { SKILLS } from "@/lib/constants";
 import { MAX_IMPORT_ROWS, duplicateKey } from "@/lib/csv-import";
 import { isDateStr, today } from "@/lib/dates";
 import { isValidBand, rawToBand } from "@/lib/scoring";
 import type { ActionResult } from "@/lib/validation";
 import { db } from "@/server/db";
-import { attempts, type NewAttempt } from "@/server/db/schema";
+import { attempts, bookSeries, type NewAttempt } from "@/server/db/schema";
 import { AuthError, authorizeStudent } from "@/server/session";
 
 const rowSchema = z
@@ -18,7 +19,8 @@ const rowSchema = z
     line: z.number().int(),
     date: z.string().refine(isDateStr),
     skill: z.enum(SKILLS),
-    book: z.number().int().min(1).max(MAX_BOOK).nullable(),
+    seriesId: z.number().int().positive().nullable(),
+    book: z.number().int().min(1).max(MAX_VOLUME).nullable(),
     test: z.number().int().min(1).max(MAX_TEST).nullable(),
     part: z.string().regex(PART_RE).nullable(),
     rawScore: z.number().int().min(0).nullable(),
@@ -30,10 +32,13 @@ const rowSchema = z
 const rowsSchema = z.array(rowSchema).max(MAX_IMPORT_ROWS);
 export type ImportCandidate = z.infer<typeof rowSchema>;
 
-/** Same normalisation the app applies to new attempts. */
-function toAttempt(r: ImportCandidate, studentId: string): NewAttempt {
-  const book = r.book;
-  const test = book == null ? null : r.test;
+type SeriesRow = { prefix: string; volumes: number | null; testsPerBook: number };
+
+/** Same normalisation the app applies to new attempts; out-of-range book data is dropped. */
+function toAttempt(r: ImportCandidate, studentId: string, seriesMap: Map<number, SeriesRow>): NewAttempt {
+  const series = r.seriesId != null ? seriesMap.get(r.seriesId) : undefined;
+  const book = series && series.volumes != null && r.book != null && r.book <= series.volumes ? r.book : null;
+  const test = series && r.test != null && r.test <= series.testsPerBook ? r.test : null;
   const part = test == null ? null : r.part;
   const lr = r.skill === "listening" || r.skill === "reading";
   const band = lr
@@ -45,10 +50,11 @@ function toAttempt(r: ImportCandidate, studentId: string): NewAttempt {
     studentId,
     date: r.date,
     skill: r.skill,
+    seriesId: series ? r.seriesId : null,
     book,
     test,
     part,
-    code: buildCode(book, test, part),
+    code: buildCode(series?.prefix, book, test, part),
     rawScore: r.rawScore,
     total: r.rawScore == null ? null : r.total,
     band,
@@ -92,7 +98,11 @@ async function prepare(raw: unknown) {
   const date = today();
   const future = parsed.data.find((r) => r.date > date);
   if (future) return { error: `Line ${future.line} is dated in the future.` } as const;
-  const rows = parsed.data.map((r) => toAttempt(r, student.id));
+  const seriesRows = await db
+    .select({ id: bookSeries.id, prefix: bookSeries.prefix, volumes: bookSeries.volumes, testsPerBook: bookSeries.testsPerBook })
+    .from(bookSeries);
+  const seriesMap = new Map(seriesRows.map((x) => [x.id, x]));
+  const rows = parsed.data.map((r) => toAttempt(r, student.id, seriesMap));
   const status = classify(student.id, rows, await existingKeys(student.id, rows));
   return { student, rows, lines: parsed.data.map((r) => r.line), status } as const;
 }

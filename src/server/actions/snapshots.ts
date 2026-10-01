@@ -22,7 +22,6 @@ const periodParams = z.object({
 });
 
 const dashboardInput = periodParams.extend({ scope: z.string().min(1) });
-const compareInput = periodParams.extend({ students: z.array(z.string().uuid()).min(2).max(8) });
 
 const KEEP_PER_KEY = 10;
 
@@ -104,15 +103,15 @@ export async function syncDashboardAction(raw: unknown): Promise<ActionResult<{ 
   });
 }
 
-export async function syncCompareAction(raw: unknown): Promise<ActionResult<{ id: string }>> {
+/** Scoreboard: every student, ranked. Stored as a "compare" snapshot over all student ids. */
+export async function syncScoreboardAction(raw: unknown): Promise<ActionResult<{ id: string }>> {
   return guarded(async () => {
     const { student } = await authorizeStudent();
-    const input = compareInput.safeParse(raw);
-    if (!input.success) return { ok: false, error: "Pick at least two students to compare." };
-    const { students, ...params } = input.data;
-    const res = await saveSnapshot("compare", [...new Set(students)], params, student.id);
-    if (res.ok) revalidatePath("/compare");
+    const input = periodParams.safeParse(raw);
+    if (!input.success) return { ok: false, error: "Invalid period." };
+    const ids = (await listStudents()).map((s) => s.id);
+    const res = await saveSnapshot("compare", ids, input.data, student.id);
+    if (res.ok) revalidatePath("/scoreboard");
     return res;
   });
 }
-

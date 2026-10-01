@@ -6,25 +6,50 @@ import { buildCode } from "@/lib/code";
 import { resolveBand } from "@/lib/scoring";
 import { attemptInputSchema, fieldErrors, type ActionResult, type AttemptInput } from "@/lib/validation";
 import { db } from "@/server/db";
-import { attempts } from "@/server/db/schema";
+import { attempts, bookSeries } from "@/server/db/schema";
 import { AuthError, authorizeStudent } from "@/server/session";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 type Saved = { id: string; code: string; band: number | null };
 
-/** Derived columns: code from book/test/part, band from the scoring rules. */
-function toRow(input: AttemptInput) {
+/** Derived columns: code from series/volume/test/part, band from the scoring rules. */
+async function toRow(input: AttemptInput): Promise<{ row: ReturnType<typeof rowFrom> } | { error: string; field: string }> {
+  let series: { prefix: string; volumes: number | null; testsPerBook: number; name: string } | undefined;
+  if (input.seriesId != null) {
+    [series] = await db
+      .select({ prefix: bookSeries.prefix, volumes: bookSeries.volumes, testsPerBook: bookSeries.testsPerBook, name: bookSeries.name })
+      .from(bookSeries)
+      .where(eq(bookSeries.id, input.seriesId))
+      .limit(1);
+    if (!series) return { error: "That book no longer exists.", field: "seriesId" };
+    if (series.volumes == null && input.book != null) return { error: `${series.name} has no volume numbers.`, field: "book" };
+    if (series.volumes != null && input.book != null && input.book > series.volumes) {
+      return { error: `${series.name} only goes up to ${series.volumes}.`, field: "book" };
+    }
+    if (input.test != null && input.test > series.testsPerBook) {
+      return { error: `${series.name} has ${series.testsPerBook} tests per book.`, field: "test" };
+    }
+  }
+  return { row: rowFrom(input, series?.prefix ?? null) };
+}
+
+function rowFrom(input: AttemptInput, prefix: string | null) {
   const scored = input.skill === "listening" || input.skill === "reading";
   const rawScore = scored || input.skill === "other" ? input.rawScore : null;
   const total = rawScore == null ? null : input.total;
+  const seriesId = prefix ? input.seriesId : null;
+  const book = seriesId == null ? null : input.book;
+  const test = seriesId == null ? null : input.test;
+  const part = test == null ? null : input.part;
   return {
     date: input.date,
     skill: input.skill,
-    book: input.book,
-    test: input.book == null ? null : input.test,
-    part: input.book == null || input.test == null ? null : input.part,
-    code: buildCode(input.book, input.test, input.part),
+    seriesId,
+    book,
+    test,
+    part,
+    code: buildCode(prefix, book, test, part),
     rawScore,
     total,
     band: resolveBand({ skill: input.skill, rawScore, total, band: input.band }),
@@ -35,7 +60,6 @@ function toRow(input: AttemptInput) {
 }
 
 function revalidate() {
-  revalidatePath("/log");
   revalidatePath("/attempts");
   revalidatePath("/students", "layout");
 }
@@ -58,9 +82,11 @@ export async function createAttemptAction(raw: unknown): Promise<ActionResult<Sa
     if (!parsed.success) {
       return { ok: false, error: "Check the highlighted fields.", fieldErrors: fieldErrors(parsed.error) };
     }
+    const built = await toRow(parsed.data);
+    if ("error" in built) return { ok: false, error: built.error, fieldErrors: { [built.field]: built.error } };
     const [row] = await db
       .insert(attempts)
-      .values({ ...toRow(parsed.data), studentId: student.id })
+      .values({ ...built.row, studentId: student.id })
       .returning({ id: attempts.id, code: attempts.code, band: attempts.band });
     revalidate();
     return { ok: true, data: row! };
@@ -75,9 +101,11 @@ export async function updateAttemptAction(id: string, raw: unknown): Promise<Act
     if (!parsed.success) {
       return { ok: false, error: "Check the highlighted fields.", fieldErrors: fieldErrors(parsed.error) };
     }
+    const built = await toRow(parsed.data);
+    if ("error" in built) return { ok: false, error: built.error, fieldErrors: { [built.field]: built.error } };
     const [row] = await db
       .update(attempts)
-      .set({ ...toRow(parsed.data), updatedAt: new Date() })
+      .set({ ...built.row, updatedAt: new Date() })
       .where(and(eq(attempts.id, id), eq(attempts.studentId, student.id)))
       .returning({ id: attempts.id, code: attempts.code, band: attempts.band });
     if (!row) return { ok: false, error: "You can only edit your own attempts." };

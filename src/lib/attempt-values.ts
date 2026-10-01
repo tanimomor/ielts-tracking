@@ -5,7 +5,8 @@ import { textToParts } from "./parts";
 export type AttemptFormValues = {
   date: string;
   skill: Skill;
-  book: string; // "" = none
+  seriesId: string; // "" = no book
+  book: string; // volume within the series, "" = none
   test: string;
   parts: string[]; // [] = full test
   rawScore: string;
@@ -20,6 +21,7 @@ export function emptyAttemptValues(date: string): AttemptFormValues {
   return {
     date,
     skill: "reading",
+    seriesId: "",
     book: "",
     test: "",
     parts: [],
@@ -37,6 +39,7 @@ const str = (v: number | null | undefined) => (v == null ? "" : String(v));
 export function attemptToValues(a: {
   date: string;
   skill: Skill;
+  seriesId: number | null;
   book: number | null;
   test: number | null;
   part: string | null;
@@ -50,6 +53,7 @@ export function attemptToValues(a: {
   return {
     date: a.date,
     skill: a.skill,
+    seriesId: str(a.seriesId),
     book: str(a.book),
     test: str(a.test),
     parts: textToParts(a.part),

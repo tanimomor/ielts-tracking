@@ -17,9 +17,9 @@ export function SkillRadar({ series, height = 260 }: { series: RadarSeries[]; he
     <div style={{ height }}>
       <ResponsiveContainer width="100%" height="100%">
         <RadarChart data={data} outerRadius="72%">
-          <PolarGrid stroke="#e4e7ec" />
-          <PolarAngleAxis dataKey="skill" tick={{ fill: "#344054", fontSize: 12 }} />
-          <PolarRadiusAxis domain={[0, 9]} tickCount={4} tick={{ fill: "#556070", fontSize: 10 }} axisLine={false} angle={90} />
+          <PolarGrid stroke="var(--chart-axis)" />
+          <PolarAngleAxis dataKey="skill" tick={{ fill: "var(--chart-label)", fontSize: 12 }} />
+          <PolarRadiusAxis domain={[0, 9]} tickCount={4} tick={{ fill: "var(--chart-tick)", fontSize: 10 }} axisLine={false} angle={90} />
           <Tooltip
             content={(p: TooltipContentProps<ValueType, NameType>) => {
               const d = p.payload?.[0]?.payload;
@@ -46,7 +46,7 @@ export function SkillRadar({ series, height = 260 }: { series: RadarSeries[]; he
               strokeDasharray={s.dashed ? "4 4" : undefined}
               fill={s.color}
               fillOpacity={s.dashed ? 0 : 0.1}
-              dot={s.dashed ? false : { r: 3, fill: s.color, stroke: "#fff", strokeWidth: 2 }}
+              dot={s.dashed ? false : { r: 3, fill: s.color, stroke: "var(--card)", strokeWidth: 2 }}
               isAnimationActive={false}
             />
           ))}

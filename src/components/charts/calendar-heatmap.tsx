@@ -3,8 +3,8 @@
 import { useEffect, useRef } from "react";
 import { addDays, eachDay, formatDateLong, startOfWeek, type DateStr } from "@/lib/dates";
 
-// Single-hue sequential ramp (indigo), light → dark; 0 is the surface tint.
-const RAMP = ["#f2f4f7", "#c7cdf7", "#8f99ee", "#5a63d8", "#3730a3"];
+// Single-hue sequential ramp (violet), light → dark; 0 is the surface tint.
+const RAMP = ["var(--heat-0)", "var(--heat-1)", "var(--heat-2)", "var(--heat-3)", "var(--heat-4)"];
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 function level(count: number, max: number) {

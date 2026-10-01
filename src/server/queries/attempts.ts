@@ -23,7 +23,10 @@ export function attemptWhere(f: AttemptFilters): SQL | undefined {
   if (range) conds.push(gte(attempts.date, range.from), lte(attempts.date, range.to));
   if (f.students.length) conds.push(inArray(attempts.studentId, f.students));
   if (f.skills.length) conds.push(inArray(attempts.skill, f.skills));
-  if (f.book != null) conds.push(eq(attempts.book, f.book));
+  if (f.book != null) {
+    conds.push(eq(attempts.seriesId, f.book.seriesId));
+    if (f.book.volume != null) conds.push(eq(attempts.book, f.book.volume));
+  }
   if (f.tags.length) conds.push(arrayOverlaps(attempts.mistakeTags, f.tags));
   if (f.q) {
     const like = `%${escapeLike(f.q)}%`;
@@ -50,7 +53,7 @@ function orderBy(f: AttemptFilters): SQL[] {
     case "skill":
       return [dir(attempts.skill), ...tiebreak];
     case "code":
-      return [dir(attempts.book), dir(attempts.test), dir(attempts.part), ...tiebreak];
+      return [dir(attempts.seriesId), dir(attempts.book), dir(attempts.test), dir(attempts.part), ...tiebreak];
     case "score":
       return [nulls(sql`${attempts.rawScore}`), ...tiebreak];
     case "percent":
@@ -67,6 +70,7 @@ const listColumns = {
   studentId: attempts.studentId,
   date: attempts.date,
   skill: attempts.skill,
+  seriesId: attempts.seriesId,
   book: attempts.book,
   test: attempts.test,
   part: attempts.part,
@@ -146,13 +150,14 @@ export async function listGrid(f: AttemptFilters) {
   return { dates, rows, total };
 }
 
-export async function listBooksUsed(): Promise<number[]> {
+/** Distinct (series, volume) pairs that have attempts, for the book filter. */
+export async function listBooksUsed(): Promise<{ seriesId: number; volume: number | null }[]> {
   const rows = await db
-    .selectDistinct({ book: attempts.book })
+    .selectDistinct({ seriesId: attempts.seriesId, volume: attempts.book })
     .from(attempts)
-    .where(sql`${attempts.book} is not null`)
-    .orderBy(desc(attempts.book));
-  return rows.map((r) => r.book!).filter((b) => b != null);
+    .where(sql`${attempts.seriesId} is not null`)
+    .orderBy(asc(attempts.seriesId), desc(attempts.book));
+  return rows.map((r) => ({ seriesId: r.seriesId!, volume: r.volume }));
 }
 
 /** Attempts behind a snapshot: same scope + period, and created before it was generated. */

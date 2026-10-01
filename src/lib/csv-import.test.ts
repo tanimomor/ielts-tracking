@@ -2,6 +2,10 @@ import { describe, expect, it } from "vitest";
 import { detectDateOrder, duplicateKey, guessStudent, missingColumns, parseSheet, parseSheetDate } from "./csv-import";
 
 const TODAY = "2026-10-01";
+const SERIES = [
+  { id: 1, name: "Cambridge", prefix: "c", volumes: 21, testsPerBook: 4 },
+  { id: 7, name: "Makkar", prefix: "mk", volumes: null, testsPerBook: 20 },
+];
 const row = (o: Record<string, string>) => ({
   Timestamp: "",
   Date: "",
@@ -37,7 +41,7 @@ describe("dates", () => {
 
 describe("parseSheet", () => {
   it("reads a full sheet row and derives the band", () => {
-    const { rows } = parseSheet([row({ Date: "13/07/2026", Skill: "Listening", Book: "17", Test: "1", Raw: "32", Total: "40", Band: "9" })], { today: TODAY });
+    const { rows } = parseSheet([row({ Date: "13/07/2026", Skill: "Listening", Book: "17", Test: "1", Raw: "32", Total: "40", Band: "9" })], { today: TODAY, series: SERIES });
     expect(rows[0]).toMatchObject({
       line: 2,
       date: "2026-07-13",
@@ -51,7 +55,7 @@ describe("parseSheet", () => {
   });
 
   it("falls back to the Code column and the Timestamp", () => {
-    const { rows } = parseSheet([row({ Timestamp: "13/07/2026 09:10:00", Code: "c16t2p3", Raw: "9/13" })], { today: TODAY });
+    const { rows } = parseSheet([row({ Timestamp: "13/07/2026 09:10:00", Code: "c16t2p3", Raw: "9/13" })], { today: TODAY, series: SERIES });
     expect(rows[0]).toMatchObject({ date: "2026-07-13", book: 16, test: 2, part: "3", rawScore: 9, total: 13, band: null });
   });
 
@@ -62,7 +66,7 @@ describe("parseSheet", () => {
         row({ Date: "2026-07-01", Skill: "R", Band: "7" }),
         row({ Date: "2026-07-01", Skill: "vocab", Band: "7" }),
       ],
-      { today: TODAY },
+      { today: TODAY, series: SERIES },
     );
     expect(rows.map((r) => [r.skill, r.band])).toEqual([
       ["writing", 6.5],
@@ -71,24 +75,40 @@ describe("parseSheet", () => {
     ]);
   });
 
+  it("recognises other series by name or code", () => {
+    const { rows } = parseSheet(
+      [
+        row({ Date: "2026-07-01", Book: "Makkar", Test: "12", Raw: "30" }),
+        row({ Date: "2026-07-01", Code: "mkt5p2", Raw: "9/13" }),
+        row({ Date: "2026-07-01", Book: "Cambridge 18", Test: "2", Raw: "33" }),
+        row({ Date: "2026-07-01", Book: "Barron's" }),
+      ],
+      { today: TODAY, series: SERIES },
+    );
+    expect(rows[0]).toMatchObject({ seriesId: 7, book: null, test: 12, code: "mkt12", errors: [] });
+    expect(rows[1]).toMatchObject({ seriesId: 7, test: 5, part: "2", code: "mkt5p2" });
+    expect(rows[2]).toMatchObject({ seriesId: 1, book: 18, test: 2, code: "c18t2", band: 7.5 });
+    expect(rows[3].errors[0]).toMatch(/Unknown book "Barron's"/);
+  });
+
   it("assumes /40 for full L/R tests with no total", () => {
-    const { rows } = parseSheet([row({ Date: "2026-07-01", Raw: "30" })], { today: TODAY });
+    const { rows } = parseSheet([row({ Date: "2026-07-01", Raw: "30" })], { today: TODAY, series: SERIES });
     expect(rows[0]).toMatchObject({ total: 40, band: 7 });
   });
 
   it("flags bad rows", () => {
     const { rows } = parseSheet(
       [row({ Date: "nope" }), row({ Date: "2026-12-01" }), row({ Date: "2026-07-01", Raw: "45", Total: "40", Band: "6.3", Book: "99" }), row({ Person: "", Date: "2026-07-01" })],
-      { today: TODAY },
+      { today: TODAY, series: SERIES },
     );
     expect(rows[0].errors).toContain("Unreadable date");
     expect(rows[1].errors).toContain("Date is in the future");
-    expect(rows[2].errors).toEqual(["Book 99 is out of range", "Score 45/40 is invalid", 'Band "6.3" is invalid']);
+    expect(rows[2].errors).toEqual(["Cambridge 99 is out of range", "Score 45/40 is invalid", 'Band "6.3" is invalid']);
     expect(rows[3].errors).toContain("No person");
   });
 
   it("honours an explicit date order", () => {
-    const { rows, dateOrder, ambiguousDates } = parseSheet([row({ Date: "03/07/2026" })], { today: TODAY, dateOrder: "mdy" });
+    const { rows, dateOrder, ambiguousDates } = parseSheet([row({ Date: "03/07/2026" })], { today: TODAY, dateOrder: "mdy", series: SERIES });
     expect(dateOrder).toBe("mdy");
     expect(rows[0].date).toBe("2026-03-07");
     expect(ambiguousDates).toBe(true);

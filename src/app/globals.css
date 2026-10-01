@@ -1,20 +1,22 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-/* White theme only. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Light theme (default). Dark overrides live under .dark below. */
 :root {
   --radius: 0.625rem;
   --background: #ffffff;
   --foreground: #0c111d;
-  --surface: #f7f8fa;
+  --surface: #f8f7fc;
   --card: #ffffff;
   --card-foreground: #0c111d;
   --popover: #ffffff;
   --popover-foreground: #0c111d;
-  /* Accent: deep indigo (7.0:1 on white). */
-  --primary: #4338ca;
+  /* Accent: vivid violet (5.7:1 on white), paired with fuchsia in gradients. */
+  --primary: #7c3aed;
   --primary-foreground: #ffffff;
-  --primary-soft: #eef0ff;
+  --primary-soft: #f3ecff;
   --secondary: #f2f4f7;
   --secondary-foreground: #101828;
   --muted: #f2f4f7;
@@ -26,7 +28,75 @@
   --warning: #b54708;
   --border: #e4e7ec;
   --input: #d0d5dd;
-  --ring: #4338ca;
+  --ring: #7c3aed;
+
+  /* Chart chrome */
+  --chart-axis: #e4e7ec;
+  --chart-grid: #eef0f3;
+  --chart-tick: #556070;
+  --chart-label: #344054;
+  --chart-cursor: #f2f4f7;
+  --chart-crosshair: #d0d5dd;
+  --chart-ref: #556070;
+  --chart-accent: #7c3aed;
+  --heat-0: #f2f0f7;
+  --heat-1: #ddd0fb;
+  --heat-2: #b794f6;
+  --heat-3: #8b5cf6;
+  --heat-4: #5b21b6;
+
+  /* Skill series (validated categorical palette, light steps) */
+  --skill-listening: #2a78d6;
+  --skill-reading: #eb6834;
+  --skill-writing: #1baf7a;
+  --skill-speaking: #eda100;
+  --skill-other: #e87ba4;
+}
+
+.dark {
+  --background: #0c0a14;
+  --foreground: #f3f1fa;
+  --surface: #13101d;
+  --card: #16131f;
+  --card-foreground: #f3f1fa;
+  --popover: #1b1726;
+  --popover-foreground: #f3f1fa;
+  /* Light violet with dark ink: 7.9:1, and readable as text on the dark surface. */
+  --primary: #a78bfa;
+  --primary-foreground: #160d2e;
+  --primary-soft: #2a1f47;
+  --secondary: #221d30;
+  --secondary-foreground: #ece9f5;
+  --muted: #221d30;
+  --muted-foreground: #a8a3ba; /* 7.4:1 on --background */
+  --accent: #221d30;
+  --accent-foreground: #ece9f5;
+  --destructive: #f87171;
+  --success: #4ade80;
+  --warning: #fbbf24;
+  --border: #2b2639;
+  --input: #3a344b;
+  --ring: #a78bfa;
+
+  --chart-axis: #2b2639;
+  --chart-grid: #221d30;
+  --chart-tick: #a8a3ba;
+  --chart-label: #d6d2e4;
+  --chart-cursor: #221d30;
+  --chart-crosshair: #4a4360;
+  --chart-ref: #a8a3ba;
+  --chart-accent: #a78bfa;
+  --heat-0: #1f1a2c;
+  --heat-1: #3b2a6b;
+  --heat-2: #5b3fb0;
+  --heat-3: #8b5cf6;
+  --heat-4: #c4b5fd;
+
+  --skill-listening: #3987e5;
+  --skill-reading: #d95926;
+  --skill-writing: #199e70;
+  --skill-speaking: #c98500;
+  --skill-other: #d55181;
 }
 
 @theme inline {
@@ -66,6 +136,11 @@
   }
   html {
     color-scheme: light;
+  }
+  html.dark {
+    color-scheme: dark;
+  }
+  html {
     -webkit-tap-highlight-color: transparent;
   }
   body {
@@ -79,6 +154,27 @@
   }
   .tabular {
     font-variant-numeric: tabular-nums;
+  }
+}
+
+@layer utilities {
+  /* Energetic brand gradient used on hero tiles and primary calls to action. */
+  .bg-brand {
+    background-image: linear-gradient(135deg, #7c3aed 0%, #c026d3 55%, #db2777 100%);
+  }
+  .text-brand {
+    background-image: linear-gradient(90deg, #7c3aed, #db2777);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  /* Soft colourful glow behind page tops. */
+  .page-glow {
+    background-image:
+      radial-gradient(40rem 16rem at 10% -4rem, rgb(124 58 237 / 0.12), transparent 70%),
+      radial-gradient(36rem 14rem at 90% -6rem, rgb(219 39 119 / 0.08), transparent 70%),
+      radial-gradient(30rem 12rem at 55% -6rem, rgb(14 165 233 / 0.07), transparent 70%);
+    background-repeat: no-repeat;
   }
 }
 

@@ -38,7 +38,7 @@ export function BarSeriesChart({
           <XAxis dataKey={xKey} {...AXIS} tickFormatter={xFormat} minTickGap={12} />
           <YAxis {...AXIS} axisLine={false} width={36} allowDecimals={false} tickFormatter={yFormat} domain={yDomain} />
           <Tooltip
-            cursor={{ fill: "#f2f4f7" }}
+            cursor={{ fill: "var(--chart-cursor)" }}
             content={(p: TooltipContentProps<ValueType, NameType>) => {
               if (!p.active || !p.payload?.length) return null;
               const items: { label: string; value: string; color?: string }[] = series.flatMap((s) => {

@@ -12,11 +12,20 @@ export const SKILL_ICONS: Record<Skill, LucideIcon> = {
 
 /** Fixed per-skill series colours (categorical slots 1–5, never re-ordered). */
 export const SKILL_COLORS: Record<Skill, string> = {
-  listening: "#2a78d6",
-  reading: "#eb6834",
-  writing: "#1baf7a",
-  speaking: "#eda100",
-  other: "#e87ba4",
+  listening: "var(--skill-listening)",
+  reading: "var(--skill-reading)",
+  writing: "var(--skill-writing)",
+  speaking: "var(--skill-speaking)",
+  other: "var(--skill-other)",
+};
+
+/** Deeper, still-vivid shades for filled buttons/tiles: all ≥ 4.5:1 with white text. */
+export const SKILL_SOLID: Record<Skill, string> = {
+  listening: "#1d4ed8",
+  reading: "#c2410c",
+  writing: "#047857",
+  speaking: "#b45309",
+  other: "#be185d",
 };
 
 export function SkillBadge({ skill, className }: { skill: Skill; className?: string }) {

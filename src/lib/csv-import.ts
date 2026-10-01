@@ -1,5 +1,6 @@
+import type { SeriesInfo } from "./books";
 import { buildCode, normalizePart, parseCode } from "./code";
-import { MAX_BOOK, MAX_TEST, type Skill } from "./constants";
+import type { Skill } from "./constants";
 import { isDateStr } from "./dates";
 import { isValidBand, rawToBand } from "./scoring";
 
@@ -15,6 +16,7 @@ export type ImportRow = {
   person: string;
   date: string | null;
   skill: Skill;
+  seriesId: number | null;
   book: number | null;
   test: number | null;
   part: string | null;
@@ -85,7 +87,7 @@ export function parseSheetDate(v: string, order: DateOrder): string | null {
 
 export function parseSheet(
   records: Record<string, string>[],
-  opts: { dateOrder?: DateOrder | "auto"; today: string },
+  opts: { dateOrder?: DateOrder | "auto"; today: string; series: SeriesInfo[] },
 ): { rows: ImportRow[]; dateOrder: DateOrder; ambiguousDates: boolean } {
   const dateValues = records.flatMap((r) => [pick(r, "Date"), pick(r, "Timestamp")]);
   const detected = detectDateOrder(dateValues);
@@ -101,19 +103,34 @@ export function parseSheet(
     else if (date > opts.today) errors.push("Date is in the future");
 
     const skill = parseSkill(pick(rec, "Skill"));
-    const fromCode = parseCode(pick(rec, "Code"));
-    let book = int(pick(rec, "Book")) ?? fromCode?.book ?? null;
-    let test = int(pick(rec, "Test")) ?? fromCode?.test ?? null;
-    let part = normalizePart(pick(rec, "Part")) ?? fromCode?.part ?? null;
-    if (book != null && (book < 1 || book > MAX_BOOK)) {
-      errors.push(`Book ${book} is out of range`);
+    const fromCode = parseCode(pick(rec, "Code"), opts.series.map((x) => x.prefix));
+    const bookCell = pick(rec, "Book");
+    // Book is a Cambridge number ("17"), a series name ("Makkar"), or "Name 3"; else use the code prefix.
+    const named = /^(.*?)\s*(\d{1,3})?$/.exec(bookCell);
+    let series: SeriesInfo | undefined;
+    let book: number | null = null;
+    if (/^\d+$/.test(bookCell)) {
+      series = opts.series.find((x) => x.prefix === (fromCode?.prefix ?? "c")) ?? opts.series.find((x) => x.prefix === "c");
+      book = Number(bookCell);
+    } else if (bookCell) {
+      series = opts.series.find((x) => x.name.toLowerCase() === bookCell.toLowerCase()) ??
+        opts.series.find((x) => x.name.toLowerCase() === named?.[1]?.toLowerCase());
+      book = series && named?.[2] && series.name.toLowerCase() !== bookCell.toLowerCase() ? Number(named[2]) : null;
+      if (!series) errors.push(`Unknown book "${bookCell}" — add it in the log form first`);
+    }
+    if (!series && fromCode) series = opts.series.find((x) => x.prefix === fromCode.prefix);
+    book ??= series && fromCode?.prefix === series.prefix ? fromCode.book : null;
+    let test = series ? (int(pick(rec, "Test")) ?? (fromCode?.prefix === series.prefix ? fromCode.test : null)) : null;
+    let part = test != null ? (normalizePart(pick(rec, "Part")) ?? fromCode?.part ?? null) : null;
+    if (series && book != null && (series.volumes == null || book < 1 || book > series.volumes)) {
+      errors.push(series.volumes == null ? `${series.name} has no volume numbers` : `${series.name} ${book} is out of range`);
       book = null;
     }
-    if (test != null && (test < 1 || test > MAX_TEST)) {
-      errors.push(`Test ${test} is out of range`);
+    if (series && test != null && (test < 1 || test > series.testsPerBook)) {
+      errors.push(`Test ${test} is out of range for ${series.name}`);
       test = null;
+      part = null;
     }
-    if (book == null || test == null) part = book == null ? null : part;
 
     // "32/40" in the Raw column is common in hand-kept sheets.
     const rawCell = pick(rec, "Raw");
@@ -144,10 +161,11 @@ export function parseSheet(
       person,
       date,
       skill,
+      seriesId: series?.id ?? null,
       book,
       test,
       part,
-      code: buildCode(book, test, part),
+      code: buildCode(series?.prefix, book, test, part),
       rawScore,
       total,
       band,

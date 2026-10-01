@@ -14,7 +14,7 @@ describe("parseFilters", () => {
       to: "2026-09-30",
       students: `${ID},not-a-uuid`,
       skills: "reading,bogus,listening",
-      book: "17",
+      book: "1:17",
       tags: "T/F/NG,Spelling",
       q: "  map ",
       sort: "band",
@@ -29,7 +29,7 @@ describe("parseFilters", () => {
       to: "2026-09-30",
       students: [ID],
       skills: ["reading", "listening"],
-      book: 17,
+      book: { seriesId: 1, volume: 17 },
       tags: ["T/F/NG", "Spelling"],
       q: "map",
       sort: "band",
@@ -40,7 +40,7 @@ describe("parseFilters", () => {
     });
   });
   it("ignores junk", () => {
-    const f = parseFilters({ range: "decade", book: "99", page: "-1", size: "7", sort: "x", from: "2026-02-31" });
+    const f = parseFilters({ range: "decade", book: "1:999", page: "-1", size: "7", sort: "x", from: "2026-02-31" });
     expect(f.preset).toBe("all");
     expect(f.book).toBeNull();
     expect(f.page).toBe(1);
@@ -48,7 +48,8 @@ describe("parseFilters", () => {
     expect(f.sort).toBe("date");
   });
   it("round-trips through URL params", () => {
-    const f = parseFilters({ range: "month", skills: "reading", q: "map", view: "grid" });
+    expect(parseFilters({ book: "3" }).book).toEqual({ seriesId: 3, volume: null });
+    const f = parseFilters({ range: "month", skills: "reading", q: "map", view: "grid", book: "2:5" });
     expect(parseFilters(filtersToParams(f))).toEqual(f);
     expect(filtersToParams(DEFAULT_FILTERS).toString()).toBe("");
   });

@@ -4,7 +4,7 @@ import { CORE_SKILLS, SKILLS, SKILL_LABELS } from "@/lib/constants";
 import { formatDateTime } from "@/lib/dates";
 import type { ReportPayload, StudentReport } from "@/lib/reports/types";
 import type { AttemptListRow } from "@/server/queries/attempts";
-import { addAttemptsSheet } from "./attempts";
+import { addAttemptsSheet, type SeriesNames } from "./attempts";
 import { DATE_FMT, addTableSheet, excelDate } from "./common";
 
 function summaryRow(r: StudentReport) {
@@ -29,7 +29,13 @@ function summaryRow(r: StudentReport) {
 }
 
 /** Summary + insights + weekly trend + detail + one sheet per skill. */
-export function buildReportWorkbook(wb: ExcelJS.Workbook, payload: ReportPayload, detail: AttemptListRow[], title: string) {
+export function buildReportWorkbook(
+  wb: ExcelJS.Workbook,
+  payload: ReportPayload,
+  detail: AttemptListRow[],
+  title: string,
+  series: SeriesNames,
+) {
   const reports = payload.combined.studentId == null ? [payload.combined, ...payload.students] : payload.students;
 
   const summary = addTableSheet(
@@ -87,9 +93,9 @@ export function buildReportWorkbook(wb: ExcelJS.Workbook, payload: ReportPayload
     ),
   );
 
-  addAttemptsSheet(wb, "Detail", detail);
+  addAttemptsSheet(wb, "Detail", detail, series);
   for (const s of SKILLS) {
     const rows = detail.filter((d) => d.skill === s);
-    if (rows.length || s !== "other") addAttemptsSheet(wb, SKILL_LABELS[s], rows);
+    if (rows.length || s !== "other") addAttemptsSheet(wb, SKILL_LABELS[s], rows, series);
   }
 }

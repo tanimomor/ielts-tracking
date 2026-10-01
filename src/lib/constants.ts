@@ -23,10 +23,6 @@ export const SKILL_SHORT: Record<Skill, string> = {
   other: "O",
 };
 
-/** Cambridge IELTS books offered in the log form's dropdown. */
-export const CAMBRIDGE_BOOKS = Array.from({ length: 20 }, (_, i) => i + 1);
-export const MAX_BOOK = 30;
-export const MAX_TEST = 4;
 
 /** Part choices per skill. "" means the full test. */
 export const PARTS_BY_SKILL: Record<Skill, { value: string; label: string }[]> = {

@@ -6,10 +6,10 @@ describe("safeCallbackPath", () => {
     expect(safeCallbackPath("/attempts?skill=reading")).toBe("/attempts?skill=reading");
   });
   it("rejects external URLs and the login page", () => {
-    expect(safeCallbackPath("https://evil.example")).toBe("/log");
-    expect(safeCallbackPath("//evil.example")).toBe("/log");
-    expect(safeCallbackPath("/\\evil.example")).toBe("/log");
-    expect(safeCallbackPath("/login")).toBe("/log");
+    expect(safeCallbackPath("https://evil.example")).toBe("/dashboard");
+    expect(safeCallbackPath("//evil.example")).toBe("/dashboard");
+    expect(safeCallbackPath("/\\evil.example")).toBe("/dashboard");
+    expect(safeCallbackPath("/login")).toBe("/dashboard");
     expect(safeCallbackPath(undefined, "/dashboard")).toBe("/dashboard");
   });
 });

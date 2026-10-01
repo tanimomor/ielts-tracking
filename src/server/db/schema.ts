@@ -9,6 +9,7 @@ import {
   numeric,
   pgEnum,
   pgTable,
+  serial,
   text,
   timestamp,
   uuid,
@@ -70,6 +71,30 @@ export const students = pgTable(
   ],
 );
 
+/**
+ * Practice book series, e.g. Cambridge (volumes 1–21) or Makkar. Shared by
+ * everyone; anyone can add one. The prefix builds attempt codes
+ * ("c17t1p2", "mk2t5") and never changes once created.
+ */
+export const bookSeries = pgTable(
+  "book_series",
+  {
+    id: serial("id").primaryKey(),
+    name: text("name").notNull().unique(),
+    prefix: text("prefix").notNull().unique(),
+    /** Number of volumes (Cambridge 1–21); null for a single book with no volume numbers. */
+    volumes: integer("volumes"),
+    testsPerBook: integer("tests_per_book").notNull().default(4),
+    createdBy: uuid("created_by").references(() => students.id, { onDelete: "set null" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    check("book_series_prefix_format", sql`${t.prefix} ~ '^[a-z]{1,6}$'`),
+    check("book_series_volumes_range", sql`${t.volumes} between 1 and 200`),
+    check("book_series_tests_range", sql`${t.testsPerBook} between 1 and 200`),
+  ],
+);
+
 export const skillEnum = pgEnum("skill", SKILLS);
 
 export const attempts = pgTable(
@@ -81,6 +106,8 @@ export const attempts = pgTable(
       .references(() => students.id, { onDelete: "cascade" }),
     date: date("date", { mode: "string" }).notNull(),
     skill: skillEnum("skill").notNull(),
+    seriesId: integer("series_id").references(() => bookSeries.id, { onDelete: "restrict" }),
+    /** Volume within the series (Cambridge 17 → 17); null for single-book series. */
     book: integer("book"),
     test: integer("test"),
     part: text("part"),
@@ -101,8 +128,9 @@ export const attempts = pgTable(
     index("attempts_student_date_idx").on(t.studentId, t.date),
     index("attempts_date_idx").on(t.date),
     index("attempts_tags_idx").using("gin", t.mistakeTags),
-    check("attempts_book_range", sql`${t.book} between 1 and 30`),
-    check("attempts_test_range", sql`${t.test} between 1 and 4`),
+    index("attempts_series_idx").on(t.seriesId, t.book),
+    check("attempts_book_range", sql`${t.book} between 1 and 200`),
+    check("attempts_test_range", sql`${t.test} between 1 and 200`),
     check("attempts_total_positive", sql`${t.total} > 0`),
     check("attempts_raw_range", sql`${t.rawScore} >= 0 and (${t.total} is null or ${t.rawScore} <= ${t.total})`),
     check("attempts_band_range", sql`${t.band} between 0 and 9 and (${t.band} * 2) = floor(${t.band} * 2)`),
@@ -144,6 +172,7 @@ export const reportSnapshots = pgTable(
 );
 
 export type Student = typeof students.$inferSelect;
+export type BookSeries = typeof bookSeries.$inferSelect;
 export type Attempt = typeof attempts.$inferSelect;
 export type NewAttempt = typeof attempts.$inferInsert;
 export type ReportSnapshot = typeof reportSnapshots.$inferSelect;

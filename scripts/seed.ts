@@ -9,6 +9,7 @@
  */
 import { config } from "dotenv";
 import { inArray } from "drizzle-orm";
+import { CAMBRIDGE_ID } from "../src/lib/books";
 import { buildCode } from "../src/lib/code";
 import { DEFAULT_MISTAKE_TAGS, type Skill } from "../src/lib/constants";
 import { addDays, today } from "../src/lib/dates";
@@ -141,7 +142,8 @@ async function main() {
             book,
             test,
             part,
-            code: buildCode(book, test, part),
+            seriesId: CAMBRIDGE_ID,
+            code: buildCode("c", book, test, part),
             rawScore,
             total,
             band: resolveBand({ skill, rawScore, total }),
@@ -156,7 +158,8 @@ async function main() {
             book,
             test,
             part,
-            code: buildCode(book, test, part),
+            seriesId: CAMBRIDGE_ID,
+            code: buildCode("c", book, test, part),
             band: resolveBand({ skill, band }),
             timeTakenMin: skill === "writing" ? (part === "1" ? 20 : part === "2" ? 40 : 60) : 14,
             notes: chance(0.3)

@@ -33,12 +33,14 @@ device out, and removing a user from `users.ts` locks them out even with a live 
 
 | Page | What it does |
 | --- | --- |
-| **Log** (`/log`) | Mobile-first form: skill, date, Cambridge book dropdown, test number, part chips, score / band, time, mistake tags (create new on the fly), notes. Live band preview. The form stays open after saving and moves on to the next part. |
-| **Attempts** (`/attempts`) | Grouped by date, filterable (date presets / custom, students, skills, book, tags, search), sortable, paginated server-side. Edit / delete your own rows. A **Grid** view mirrors the old Google Sheet (dates × students × skills, cells like `c17t1 (7.5)`). **Export** downloads exactly the filtered list as `.xlsx` (Attempts + Grid sheets). |
-| **Dashboard** (`/dashboard`) | One student or everyone; month, year, all time or a custom range. Shows the **latest saved snapshot** and only recomputes when you press **Sync & refresh**. Headline band, per-skill cards with ▲/▼ vs the previous period, insights, band trend vs target, skill radar, weekly volume, practice calendar, L/R by section, mistake tags, Cambridge book breakdown. Export a snapshot to `.xlsx` (Summary, Insights, Weekly, Detail, one sheet per skill). |
-| **Compare** (`/compare`) | Pick 2+ students and a period: overlaid trends in each student's colour, side-by-side radars, a per-metric table with the leader and spread highlighted, volume comparison. Snapshot-based, same as the dashboard. |
-| **Students** (`/students`, `/students/[id]`) | Profiles with target vs current, progress timeline, milestones (first 7.0 in Reading, 50 attempts, …), next goals, full history, export and profile editing (your own). |
-| **Import** (`/import`) | One-time CSV import of the Google Sheet "Log" tab with Person → student mapping, preview, error list and duplicate check. |
+| **Quick entry** (button in the sidebar, floating **+** on mobile, or press **N**) | A four-step dialog: 1 Practice (skill, date) → 2 Book & test (book, volume, test, part) → 3 Result (score or band, live band preview) → 4 optional Details (time, tags, notes). **Save & add another** keeps it open and moves to the next part. |
+| **Books** | Cambridge comes with volumes 1–21. Anyone can **add a book** (e.g. Makkar) from the Book dropdown: a name, a short code (`mk` → codes like `mk2t5` / `mkt5`), numbered volumes or a single book, and tests per book. The pencil next to the dropdown edits it (e.g. when Cambridge 22 comes out). |
+| **Attempts** (`/attempts`) | Grouped by date, filterable (date presets / custom, students, skills, book or a single volume, tags, search), sortable, paginated server-side. Edit / delete your own rows. A **Grid** view mirrors the old Google Sheet. **Export** downloads exactly the filtered list as `.xlsx` (Attempts + Grid sheets). |
+| **Dashboard** (`/dashboard`) | One student or everyone; month, year, all time or custom range. Shows the **latest saved snapshot** and only recomputes on **Sync & refresh**. Headline band, per-skill cards, insights, band trend vs target, skill radar, weekly volume, practice calendar, L/R by section, mistake tags, per-book breakdown. Export to `.xlsx`. |
+| **Scoreboard** (`/scoreboard`) | Everyone ranked by estimated overall band, category champions (most practice, streak, most improved, best per skill), a head-to-head table and a weekly practice race. Snapshot-based like the dashboard. |
+| **Students** (`/students`, `/students/[id]`) | Profiles with target vs current, progress timeline, milestones, next goals, full history, export and profile editing (your own). |
+| **Import** (`/import`) | One-time CSV import of the Google Sheet "Log" tab with Person → student mapping, preview, error list and duplicate check. Book can be a Cambridge number, a book name ("Makkar", "Cambridge 18") or a code. |
+| **Theme** | Light, dark or follow the device. Switch it from the user menu or the login page. |
 
 ### Rules worth knowing
 

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { LogOut, Upload, UserRound } from "lucide-react";
 import { StudentAvatar } from "@/components/students/student-avatar";
+import { ThemeSwitch } from "@/components/theme";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -54,6 +55,11 @@ export function UserMenu({ student, subtitle, variant }: Props) {
             <Upload /> Import CSV
           </Link>
         </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <div className="flex items-center justify-between px-2 py-1.5 text-sm">
+          <span>Theme</span>
+          <ThemeSwitch />
+        </div>
         <DropdownMenuSeparator />
         <DropdownMenuItem
           variant="destructive"

@@ -1,5 +1,6 @@
 import "server-only";
 import type ExcelJS from "exceljs";
+import { bookName } from "@/lib/books";
 import { SKILL_LABELS } from "@/lib/constants";
 import type { GridModel } from "@/lib/grid";
 import type { AttemptListRow } from "@/server/queries/attempts";
@@ -9,7 +10,7 @@ export const ATTEMPT_COLUMNS = [
   { header: "Date", key: "date", width: 13, numFmt: DATE_FMT },
   { header: "Student", key: "student", width: 16 },
   { header: "Skill", key: "skill", width: 11 },
-  { header: "Book", key: "book", width: 7 },
+  { header: "Book", key: "book", width: 16 },
   { header: "Test", key: "test", width: 6 },
   { header: "Part", key: "part", width: 6 },
   { header: "Code", key: "code", width: 11 },
@@ -22,12 +23,14 @@ export const ATTEMPT_COLUMNS = [
   { header: "Notes", key: "notes", width: 40, wrap: true },
 ];
 
-export function attemptRow(a: AttemptListRow) {
+export type SeriesNames = Map<number, { name: string }>;
+
+export function attemptRow(a: AttemptListRow, series: SeriesNames) {
   return {
     date: excelDate(a.date),
     student: a.studentName,
     skill: SKILL_LABELS[a.skill],
-    book: a.book,
+    book: bookName(a.seriesId != null ? series.get(a.seriesId) : null, a.book) || null,
     test: a.test,
     part: a.part,
     code: a.code,
@@ -41,8 +44,8 @@ export function attemptRow(a: AttemptListRow) {
   };
 }
 
-export function addAttemptsSheet(wb: ExcelJS.Workbook, name: string, rows: AttemptListRow[], tabColor?: string) {
-  return addTableSheet(wb, name, ATTEMPT_COLUMNS, rows.map(attemptRow), { tabColor });
+export function addAttemptsSheet(wb: ExcelJS.Workbook, name: string, rows: AttemptListRow[], series: SeriesNames, tabColor?: string) {
+  return addTableSheet(wb, name, ATTEMPT_COLUMNS, rows.map((r) => attemptRow(r, series)), { tabColor });
 }
 
 export function addGridSheet(wb: ExcelJS.Workbook, grid: GridModel) {

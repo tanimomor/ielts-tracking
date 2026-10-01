@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import type { SeriesInfo } from "@/lib/books";
 import { MAX_IMPORT_ROWS, guessStudent, missingColumns, parseSheet, type DateOrder, type ImportRow } from "@/lib/csv-import";
 import { formatDateShort } from "@/lib/dates";
 import { scoreText } from "@/lib/format";
@@ -28,6 +29,7 @@ function toCandidate(r: ImportRow): ImportCandidate {
     line: r.line,
     date: r.date!,
     skill: r.skill,
+    seriesId: r.seriesId,
     book: r.book,
     test: r.test,
     part: r.part,
@@ -38,7 +40,7 @@ function toCandidate(r: ImportRow): ImportCandidate {
   };
 }
 
-export function ImportWizard({ me, students, today }: { me: Student; students: Student[]; today: string }) {
+export function ImportWizard({ me, students, today, series }: { me: Student; students: Student[]; today: string; series: SeriesInfo[] }) {
   const [fileName, setFileName] = useState<string | null>(null);
   const [records, setRecords] = useState<Record<string, string>[] | null>(null);
   const [dateOrder, setDateOrder] = useState<DateOrder | "auto">("auto");
@@ -50,7 +52,7 @@ export function ImportWizard({ me, students, today }: { me: Student; students: S
   const [drag, setDrag] = useState(false);
   const input = useRef<HTMLInputElement>(null);
 
-  const parsed = useMemo(() => (records ? parseSheet(records, { dateOrder, today }) : null), [records, dateOrder, today]);
+  const parsed = useMemo(() => (records ? parseSheet(records, { dateOrder, today, series }) : null), [records, dateOrder, today, series]);
   const persons = useMemo(() => {
     const counts = new Map<string, number>();
     for (const r of parsed?.rows ?? []) if (r.person) counts.set(r.person, (counts.get(r.person) ?? 0) + 1);

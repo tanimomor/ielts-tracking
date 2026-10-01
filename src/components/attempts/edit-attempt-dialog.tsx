@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import type { AttemptFormValues } from "@/lib/attempt-values";
+import type { SeriesInfo } from "@/lib/books";
 import { AttemptForm } from "./attempt-form";
 
 export function EditAttemptDialog({
@@ -13,12 +14,14 @@ export function EditAttemptDialog({
   values,
   maxDate,
   tagSuggestions,
+  series,
 }: {
   id: string;
   label: string;
   values: AttemptFormValues;
   maxDate: string;
   tagSuggestions: string[];
+  series: SeriesInfo[];
 }) {
   const [open, setOpen] = useState(false);
   return (
@@ -28,7 +31,7 @@ export function EditAttemptDialog({
           <Pencil />
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-2xl">
+      <DialogContent className="max-h-[calc(100dvh-1rem)] bg-surface p-4 sm:max-w-2xl sm:p-6">
         <DialogHeader>
           <DialogTitle>Edit attempt</DialogTitle>
           <DialogDescription>{label}</DialogDescription>
@@ -40,7 +43,9 @@ export function EditAttemptDialog({
             initial={values}
             maxDate={maxDate}
             tagSuggestions={tagSuggestions}
+            series={series}
             onSaved={() => setOpen(false)}
+            onCancel={() => setOpen(false)}
           />
         )}
       </DialogContent>

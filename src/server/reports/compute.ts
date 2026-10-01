@@ -78,13 +78,13 @@ export async function computeReport(
         from attempts a
         where ${inScope} and a.date between ${addDays(today, -400)}::date and ${today}::date`),
       q<RawAggregates["books"][number]>(sql`
-        select a.student_id::text as "studentId", a.book, a.test,
+        select a.student_id::text as "studentId", s.name as series, s.prefix, a.book, a.test,
           count(*)::int as attempts,
           coalesce(sum(a.band), 0)::float8 as "bandSum", count(a.band)::int as banded,
           coalesce(sum(a.percent), 0)::float8 as "pctSum", count(a.percent)::int as "pctCount"
-        from attempts a
-        where ${inScope} ${cur} and a.book is not null
-        group by 1, 2, 3`),
+        from attempts a join book_series s on s.id = a.series_id
+        where ${inScope} ${cur}
+        group by 1, 2, 3, 4, 5`),
       q<RawAggregates["tags"][number]>(sql`
         select a.student_id::text as "studentId", t.tag, count(*)::int as count
         from attempts a, unnest(a.mistake_tags) as t(tag)

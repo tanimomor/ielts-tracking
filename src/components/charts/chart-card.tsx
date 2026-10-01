@@ -1,9 +1,14 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
-export const AXIS = { stroke: "#e4e7ec", tick: { fill: "#556070", fontSize: 12 }, tickLine: false } as const;
-export const GRID = { stroke: "#eef0f3", vertical: false } as const;
-export const SURFACE = "#ffffff";
+// Theme-aware: SVG presentation attributes resolve CSS variables.
+export const AXIS = { stroke: "var(--chart-axis)", tick: { fill: "var(--chart-tick)", fontSize: 12 }, tickLine: false } as const;
+export const GRID = { stroke: "var(--chart-grid)", vertical: false } as const;
+export const SURFACE = "var(--card)";
+export const TICK_STRONG = "var(--chart-label)";
+export const CURSOR = "var(--chart-cursor)";
+export const REF = "var(--chart-ref)";
+export const ACCENT = "var(--chart-accent)";
 
 export function ChartCard({
   title,

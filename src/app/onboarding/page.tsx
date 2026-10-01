@@ -21,7 +21,7 @@ export default async function OnboardingPage({ searchParams }: PageProps<"/onboa
   const color = STUDENT_COLORS.find((c) => !taken.includes(c)) ?? STUDENT_COLORS[0];
 
   return (
-    <main className="grid min-h-dvh place-items-center bg-white px-6 py-12">
+    <main className="grid min-h-dvh place-items-center bg-background px-6 py-12">
       <div className="w-full max-w-md">
         <BrandMark className="size-12 rounded-xl text-base" />
         <h1 className="mt-8 text-2xl font-semibold tracking-tight">

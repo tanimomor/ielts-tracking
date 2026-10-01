@@ -30,18 +30,18 @@ export function HBarChart({
             width={130}
             tickLine={false}
             axisLine={false}
-            tick={{ fill: "#344054", fontSize: 12 }}
+            tick={{ fill: "var(--chart-label)", fontSize: 12 }}
             interval={0}
           />
           <Tooltip
-            cursor={{ fill: "#f2f4f7" }}
+            cursor={{ fill: "var(--chart-cursor)" }}
             content={(p: TooltipContentProps<ValueType, NameType>) => {
               const d = p.payload?.[0]?.payload;
               return p.active && d ? <TooltipBox title={d.label} items={[{ label: valueLabel, value: format(d.value), color }]} /> : null;
             }}
           />
           <Bar dataKey="value" fill={color} radius={[0, 4, 4, 0]} maxBarSize={18} isAnimationActive={false}>
-            <LabelList dataKey="value" position="right" formatter={(v: unknown) => format(Number(v))} style={{ fill: "#344054", fontSize: 12 }} />
+            <LabelList dataKey="value" position="right" formatter={(v: unknown) => format(Number(v))} style={{ fill: "var(--chart-label)", fontSize: 12 }} />
           </Bar>
         </BarChart>
       </ResponsiveContainer>

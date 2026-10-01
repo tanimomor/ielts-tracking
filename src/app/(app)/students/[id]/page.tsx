@@ -21,6 +21,7 @@ import { formatBand } from "@/lib/scoring";
 import { listAttempts } from "@/server/queries/attempts";
 import { latestSnapshot, scopeKeyFor } from "@/server/queries/snapshots";
 import { getStudent, listStudents, studentMilestoneRows } from "@/server/queries/students";
+import { listSeries } from "@/server/queries/books";
 import { listTagSuggestions } from "@/server/queries/tags";
 import { requireStudent } from "@/server/session";
 
@@ -40,12 +41,13 @@ export default async function StudentPage({ params, searchParams }: PageProps<"/
   const filters = { ...parseFilters(await searchParams), students: [student.id], view: "table" as const };
   const allTime = parsePeriod({ period: "all" }, date);
 
-  const [all, snapshot, history, tags, milestoneRows] = await Promise.all([
+  const [all, snapshot, history, tags, milestoneRows, series] = await Promise.all([
     listStudents(),
     latestSnapshot("dashboard", scopeKeyFor("dashboard", [student.id]), allTime),
     listAttempts(filters),
     listTagSuggestions(),
     studentMilestoneRows(student.id),
+    listSeries(),
   ]);
   const milestones = buildMilestones(milestoneRows.firsts, milestoneRows.nth);
   const best = Object.fromEntries(
@@ -143,7 +145,7 @@ export default async function StudentPage({ params, searchParams }: PageProps<"/
         <AttemptsShell filters={filters} toolbar={null}>
           {history.rows.length ? (
             <>
-              <AttemptsTable rows={history.rows} currentStudentId={me.id} today={date} tagSuggestions={tags} />
+              <AttemptsTable rows={history.rows} currentStudentId={me.id} today={date} tagSuggestions={tags} series={series} />
               <Pagination total={history.total} unit="attempts" />
             </>
           ) : (

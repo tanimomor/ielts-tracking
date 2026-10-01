@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { PART_RE } from "./code";
-import { MAX_BOOK, MAX_TEST, SKILLS } from "./constants";
+import { MAX_TEST, MAX_VOLUME } from "./books";
+import { SKILLS } from "./constants";
 import { isDateStr } from "./dates";
 import { isValidBand } from "./scoring";
 
@@ -45,7 +46,8 @@ export const attemptInputSchema = z
   .object({
     date: z.string().refine(isDateStr, "Pick a valid date"),
     skill: z.enum(SKILLS),
-    book: optionalInt(1, MAX_BOOK, "Book"),
+    seriesId: optionalInt(1, 1_000_000, "Book"),
+    book: optionalInt(1, MAX_VOLUME, "Volume"),
     test: optionalInt(1, MAX_TEST, "Test"),
     part: z.preprocess(
       (v) => (typeof v === "string" ? v.trim() || null : v ?? null),
@@ -65,8 +67,8 @@ export const attemptInputSchema = z
     if (v.rawScore != null && v.total != null && v.rawScore > v.total) {
       ctx.addIssue({ code: "custom", path: ["rawScore"], message: "Can't be more than the total" });
     }
-    if (v.test != null && v.book == null) {
-      ctx.addIssue({ code: "custom", path: ["book"], message: "Pick the book for this test" });
+    if ((v.test != null || v.book != null) && v.seriesId == null) {
+      ctx.addIssue({ code: "custom", path: ["seriesId"], message: "Pick the book for this test" });
     }
     if ((v.skill === "listening" || v.skill === "reading") && v.rawScore == null) {
       ctx.addIssue({ code: "custom", path: ["rawScore"], message: "Enter how many you got right" });
@@ -76,6 +78,20 @@ export const attemptInputSchema = z
     }
   });
 export type AttemptInput = z.infer<typeof attemptInputSchema>;
+
+export const seriesInputSchema = z.object({
+  name: z.string().trim().min(2, "Enter the book's name").max(40, "Keep it under 40 characters"),
+  prefix: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .regex(/^[a-z]{1,6}$/, "1–6 letters, used in codes like mk2t5"),
+  volumes: optionalInt(1, MAX_VOLUME, "Volumes"),
+  testsPerBook: z.coerce.number().int().min(1, "At least 1 test").max(MAX_TEST, `At most ${MAX_TEST} tests`),
+});
+export type SeriesInput = z.infer<typeof seriesInputSchema>;
+
+export const seriesUpdateSchema = seriesInputSchema.pick({ name: true, volumes: true, testsPerBook: true });
 
 export type FieldErrors = Partial<Record<string, string>>;
 
