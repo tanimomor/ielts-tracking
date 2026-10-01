@@ -126,21 +126,37 @@ change on every deploy, so Google sign-in only works on the domains you register
 
 ## Deploying to Vercel (Hobby)
 
-1. Push this repo to GitHub and import it in Vercel (framework: Next.js; install command `pnpm install`).
-2. Add the database: `vc i neon` (or Vercel dashboard → Storage → Neon). This sets `DATABASE_URL`.
-3. **Settings → Environment Variables**: add `AUTH_SECRET`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`,
-   `ALLOWED_EMAILS` (and `AUTH_URL` if you use a custom domain) for Production, and for Preview
-   if you want previews to work.
-4. Deploy. The `vercel-build` script runs `drizzle-kit migrate` and then `next build`, so the
-   schema is always up to date.
-5. Make sure the production domain is in the Google OAuth client (step 3 above).
-6. First sign-in: each student signs in with Google. If a student row with that email already
-   exists (from the seed or another student's import), it's linked automatically. Otherwise a
-   short onboarding asks for display name, target band and chart colour.
-7. Optional: open **Import** and upload the old sheet as CSV, then press **Sync & refresh** on
-   the dashboard.
+`vercel.json` pins the build: `pnpm install --frozen-lockfile`, then `pnpm run vercel-build`
+(`drizzle-kit migrate && next build`, so the database schema is migrated on every deploy). It also
+runs functions in **Singapore (`sin1`)**, the closest Vercel region to Dhaka, and adds basic
+security headers. Create the Neon database in the same area (**AWS ap-southeast-1, Singapore**)
+so each query stays local.
 
----
+1. **Import the repo.** In Vercel, go to **Add New → Project**, pick this GitHub repo and keep the
+   detected Next.js settings. `vercel.json` overrides the commands. The first build fails without
+   a database, which is expected.
+2. **Add Neon.** In the project, open **Storage → Create Database → Neon** (Marketplace), choose
+   region *Singapore* and connect it to the Production and Preview environments. This sets
+   `DATABASE_URL`. From a terminal, `vercel link && vc i neon` does the same.
+3. **Add environment variables** under **Settings → Environment Variables**, for Production and
+   Preview:
+   - `AUTH_SECRET`: output of `openssl rand -base64 32`
+   - `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`: from Google Cloud (see above)
+   - `ALLOWED_EMAILS`: e.g. `you@gmail.com,friend@gmail.com`
+   - `AUTH_URL`: only needed for a custom domain, e.g. `https://ielts.example.com`
+4. **Register the domain with Google.** Add `https://<project>.vercel.app` as an authorized
+   JavaScript origin and `https://<project>.vercel.app/api/auth/callback/google` as a redirect URI.
+5. **Redeploy** (Deployments → ⋯ → Redeploy). The build log should show
+   `migrations applied successfully` before `next build`.
+6. **Sign in** with each student's Google account. A student row with a matching email is linked
+   automatically. Otherwise a short onboarding asks for name, target band and colour.
+7. *(Optional)* **Seed or import.** Upload the old sheet on **Import**, or seed sample data from your
+   machine with `vercel env pull .env.local && pnpm db:seed`. The seed replaces the first two
+   students' attempts, so only use it on an empty or dev database. Then press **Sync & refresh** on the
+   dashboard.
+
+Preview deployments get a new URL every time, and Google only accepts registered redirect URIs.
+That means sign-in works on the production domain, not on previews.
 
 ## Project structure
 
