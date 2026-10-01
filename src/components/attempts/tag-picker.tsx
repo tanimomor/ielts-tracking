@@ -14,6 +14,8 @@ type Props = {
   suggestions: string[];
   max?: number;
   placeholder?: string;
+  allowCreate?: boolean;
+  className?: string;
 };
 
 function normalize(tag: string) {
@@ -21,11 +23,20 @@ function normalize(tag: string) {
 }
 
 /** Multi-select with type-to-create. */
-export function TagPicker({ id, value, onChange, suggestions, max = 15, placeholder = "Add mistake tags" }: Props) {
+export function TagPicker({
+  id,
+  value,
+  onChange,
+  suggestions,
+  max = 15,
+  placeholder = "Add mistake tags",
+  allowCreate = true,
+  className,
+}: Props) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const q = normalize(query);
-  const canCreate = q.length > 0 && !suggestions.includes(q) && !value.includes(q);
+  const canCreate = allowCreate && q.length > 0 && !suggestions.includes(q) && !value.includes(q);
 
   function toggle(tag: string) {
     const t = normalize(tag);
@@ -36,7 +47,7 @@ export function TagPicker({ id, value, onChange, suggestions, max = 15, placehol
   }
 
   return (
-    <div className="grid gap-2">
+    <div className={cn("grid gap-2", className)}>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
@@ -57,9 +68,9 @@ export function TagPicker({ id, value, onChange, suggestions, max = 15, placehol
         </PopoverTrigger>
         <PopoverContent className="w-(--radix-popover-trigger-width) min-w-64 p-0" align="start">
           <Command>
-            <CommandInput placeholder="Search or create…" value={query} onValueChange={setQuery} />
+            <CommandInput placeholder={allowCreate ? "Search or create…" : "Search tags…"} value={query} onValueChange={setQuery} />
             <CommandList>
-              <CommandEmpty>{q ? "No match — press Enter to create it." : "Type to search."}</CommandEmpty>
+              <CommandEmpty>{q && allowCreate ? "No match — press Enter to create it." : "No matching tags."}</CommandEmpty>
               {canCreate && (
                 <CommandGroup>
                   <CommandItem value={`__create__${q}`} onSelect={() => toggle(q)}>
