@@ -30,7 +30,7 @@ describe("parseFilters", () => {
       students: [ID],
       skills: ["reading", "listening"],
       book: 17,
-      tags: ["t/f/ng", "spelling"],
+      tags: ["T/F/NG", "Spelling"],
       q: "map",
       sort: "band",
       dir: "asc",

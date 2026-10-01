@@ -1,5 +1,5 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { cn, initials } from "@/lib/utils";
+import { cn, initials, readableTextOn } from "@/lib/utils";
 
 type StudentLike = { name: string; color: string; avatarUrl?: string | null };
 
@@ -21,7 +21,7 @@ export function StudentAvatar({
       style={{ "--tw-ring-color": student.color } as React.CSSProperties}
     >
       {student.avatarUrl && <AvatarImage src={student.avatarUrl} alt="" referrerPolicy="no-referrer" />}
-      <AvatarFallback className="text-white" style={{ backgroundColor: student.color }}>
+      <AvatarFallback style={{ backgroundColor: student.color, color: readableTextOn(student.color) }}>
         {initials(student.name)}
       </AvatarFallback>
     </Avatar>

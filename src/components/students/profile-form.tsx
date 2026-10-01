@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { STUDENT_COLORS } from "@/lib/constants";
-import { cn } from "@/lib/utils";
+import { cn, readableTextOn } from "@/lib/utils";
 import type { ActionResult } from "@/lib/validation";
 
 const TARGETS = Array.from({ length: 11 }, (_, i) => (4 + i * 0.5).toFixed(1));
@@ -86,7 +86,7 @@ export function ProfileForm({ action, defaults, takenColors = [], callbackUrl, s
                 type="button"
                 role="radio"
                 aria-checked={selected}
-                aria-label={`${c}${taken ? " (used by another student)" : ""}`}
+                aria-label={`Colour ${STUDENT_COLORS.indexOf(c) + 1}${taken ? " (used by another student)" : ""}`}
                 onClick={() => setColor(c)}
                 className={cn(
                   "relative grid size-9 cursor-pointer place-items-center rounded-full ring-offset-2 transition-shadow focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none",
@@ -95,7 +95,7 @@ export function ProfileForm({ action, defaults, takenColors = [], callbackUrl, s
                 )}
                 style={{ backgroundColor: c }}
               >
-                {selected && <Check className="size-4 text-white" aria-hidden />}
+                {selected && <Check className="size-4" style={{ color: readableTextOn(c) }} aria-hidden />}
               </button>
             );
           })}

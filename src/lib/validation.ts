@@ -36,7 +36,10 @@ export const studentProfileSchema = z.object({
 });
 export type StudentProfileInput = z.infer<typeof studentProfileSchema>;
 
-export const tagSchema = z.string().trim().toLowerCase().min(1).max(40);
+export const tagSchema = z
+  .string()
+  .transform((t) => t.trim().replace(/\s+/g, " "))
+  .pipe(z.string().min(1).max(40));
 
 export const attemptInputSchema = z
   .object({

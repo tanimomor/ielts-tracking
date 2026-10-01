@@ -154,3 +154,17 @@ export async function listBooksUsed(): Promise<number[]> {
     .orderBy(desc(attempts.book));
   return rows.map((r) => r.book!).filter((b) => b != null);
 }
+
+/** Attempts behind a snapshot: same scope + period, and created before it was generated. */
+export async function attemptsForSnapshot(studentIds: string[] | null, range: { from: string; to: string } | null, generatedAt: Date) {
+  const conds: (SQL | undefined)[] = [lte(attempts.createdAt, generatedAt)];
+  if (studentIds?.length) conds.push(inArray(attempts.studentId, studentIds));
+  if (range) conds.push(gte(attempts.date, range.from), lte(attempts.date, range.to));
+  return db
+    .select(listColumns)
+    .from(attempts)
+    .innerJoin(students, eq(students.id, attempts.studentId))
+    .where(and(...conds))
+    .orderBy(desc(attempts.date), desc(attempts.createdAt))
+    .limit(20_000);
+}

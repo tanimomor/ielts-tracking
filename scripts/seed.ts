@@ -66,7 +66,7 @@ async function main() {
     {
       name: nameFromEmail(emailA, "Student A"),
       email: emailA,
-      color: "#2563eb",
+      color: "#2a78d6",
       targetBand: 7,
       listening: [0.66, 0.14],
       reading: [0.6, 0.12],
@@ -78,7 +78,7 @@ async function main() {
     {
       name: nameFromEmail(emailB, "Student B"),
       email: emailB,
-      color: "#be185d",
+      color: "#eb6834",
       targetBand: 7.5,
       listening: [0.72, 0.1],
       reading: [0.7, 0.12],

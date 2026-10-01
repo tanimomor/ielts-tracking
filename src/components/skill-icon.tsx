@@ -10,23 +10,22 @@ export const SKILL_ICONS: Record<Skill, LucideIcon> = {
   other: Sparkles,
 };
 
-/** Fixed per-skill hues for charts (distinct from student colours by shape/labels too). */
+/** Fixed per-skill series colours (categorical slots 1–5, never re-ordered). */
 export const SKILL_COLORS: Record<Skill, string> = {
-  listening: "#0e7490",
-  reading: "#4338ca",
-  writing: "#b45309",
-  speaking: "#be185d",
-  other: "#667085",
+  listening: "#2a78d6",
+  reading: "#eb6834",
+  writing: "#1baf7a",
+  speaking: "#eda100",
+  other: "#e87ba4",
 };
 
 export function SkillBadge({ skill, className }: { skill: Skill; className?: string }) {
   const Icon = SKILL_ICONS[skill];
   return (
     <span
-      className={cn("inline-flex items-center gap-1.5 rounded-md px-1.5 py-0.5 text-xs font-medium", className)}
-      style={{ backgroundColor: `${SKILL_COLORS[skill]}14`, color: SKILL_COLORS[skill] }}
+      className={cn("inline-flex items-center gap-1.5 rounded-md bg-muted px-1.5 py-0.5 text-xs font-medium text-secondary-foreground", className)}
     >
-      <Icon className="size-3.5" aria-hidden />
+      <Icon className="size-3.5" style={{ color: SKILL_COLORS[skill] }} aria-hidden />
       {SKILL_LABELS[skill]}
     </span>
   );

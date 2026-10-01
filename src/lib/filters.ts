@@ -70,7 +70,7 @@ export function parseFilters(params: Params): AttemptFilters {
     students: list(params, "students").filter((s) => UUID_RE.test(s)),
     skills: list(params, "skills").filter((s): s is Skill => (SKILLS as readonly string[]).includes(s)),
     book: Number.isInteger(book) && book >= 1 && book <= MAX_BOOK ? book : null,
-    tags: list(params, "tags").map((t) => t.toLowerCase()).slice(0, 20),
+    tags: list(params, "tags").slice(0, 20),
     q: (get(params, "q") ?? "").trim().slice(0, 100),
     sort: (SORT_KEYS as readonly string[]).includes(sort ?? "") ? (sort as SortKey) : DEFAULT_FILTERS.sort,
     dir: get(params, "dir") === "asc" ? "asc" : "desc",

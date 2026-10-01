@@ -90,16 +90,19 @@ export const DEFAULT_MISTAKE_TAGS = [
   "pronunciation",
 ];
 
-/** Palette offered during onboarding; all pass AA against white for text/markers. */
+/**
+ * Categorical palette (validated for colour-vision deficiency in this order).
+ * Students are offered these in order; names always accompany the colour.
+ */
 export const STUDENT_COLORS = [
-  "#2563eb",
-  "#be185d",
-  "#047857",
-  "#b45309",
-  "#7c3aed",
-  "#0e7490",
-  "#dc2626",
-  "#4d7c0f",
+  "#2a78d6",
+  "#eb6834",
+  "#1baf7a",
+  "#eda100",
+  "#e87ba4",
+  "#008300",
+  "#4a3aa7",
+  "#e34948",
 ];
 
 export const BAND_OPTIONS = Array.from({ length: 19 }, (_, i) => i * 0.5);

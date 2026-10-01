@@ -19,8 +19,10 @@ type Props = {
 };
 
 function normalize(tag: string) {
-  return tag.trim().toLowerCase().replace(/\s+/g, " ").slice(0, 40);
+  return tag.trim().replace(/\s+/g, " ").slice(0, 40);
 }
+
+const same = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
 
 /** Multi-select with type-to-create. */
 export function TagPicker({
@@ -36,12 +38,14 @@ export function TagPicker({
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const q = normalize(query);
-  const canCreate = allowCreate && q.length > 0 && !suggestions.includes(q) && !value.includes(q);
+  const canCreate = allowCreate && q.length > 0 && !suggestions.some((s) => same(s, q)) && !value.some((v) => same(v, q));
 
   function toggle(tag: string) {
-    const t = normalize(tag);
-    if (!t) return;
-    if (value.includes(t)) onChange(value.filter((v) => v !== t));
+    const typed = normalize(tag);
+    if (!typed) return;
+    // Reuse the existing spelling of a tag so "t/f/ng" and "T/F/NG" don't split.
+    const t = suggestions.find((s) => same(s, typed)) ?? typed;
+    if (value.some((v) => same(v, t))) onChange(value.filter((v) => !same(v, t)));
     else if (value.length < max) onChange([...value, t]);
     setQuery("");
   }
