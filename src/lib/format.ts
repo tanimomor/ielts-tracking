@@ -3,7 +3,7 @@ import { formatBand } from "./scoring";
 
 type ScoreLike = { rawScore: number | null; total: number | null; percent: number | null; band: number | null };
 
-export function scoreText(a: ScoreLike): string {
+export function scoreText(a: Pick<ScoreLike, "rawScore" | "total">): string {
   return a.rawScore != null && a.total != null ? `${a.rawScore}/${a.total}` : "";
 }
 
