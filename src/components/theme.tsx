@@ -1,13 +1,13 @@
 "use client";
 
-import { Monitor, Moon, Sun } from "lucide-react";
+import { Moon, Sun } from "lucide-react";
 import { ThemeProvider as NextThemes, useTheme } from "next-themes";
 import { useSyncExternalStore } from "react";
 import { cn } from "@/lib/utils";
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   return (
-    <NextThemes attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+    <NextThemes attribute="class" defaultTheme="light" enableSystem={false} themes={["light", "dark"]} disableTransitionOnChange>
       {children}
     </NextThemes>
   );
@@ -16,7 +16,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 const OPTIONS = [
   { value: "light", label: "Light", icon: Sun },
   { value: "dark", label: "Dark", icon: Moon },
-  { value: "system", label: "System", icon: Monitor },
 ] as const;
 
 const subscribe = () => () => {};
@@ -25,14 +24,14 @@ function useMounted() {
   return useSyncExternalStore(subscribe, () => true, () => false);
 }
 
-/** Segmented Light / Dark / System switch. */
+/** Light / Dark switch (light is the default). */
 export function ThemeSwitch({ className }: { className?: string }) {
-  const { theme, setTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
   const mounted = useMounted();
   return (
     <div role="radiogroup" aria-label="Theme" className={cn("inline-flex rounded-lg border bg-background p-0.5", className)}>
       {OPTIONS.map(({ value, label, icon: Icon }) => {
-        const on = mounted && theme === value;
+        const on = mounted && (resolvedTheme ?? "light") === value;
         return (
           <button
             key={value}

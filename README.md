@@ -40,7 +40,7 @@ device out, and removing a user from `users.ts` locks them out even with a live 
 | **Scoreboard** (`/scoreboard`) | Everyone ranked by estimated overall band, category champions (most practice, streak, most improved, best per skill), a head-to-head table and a weekly practice race. Snapshot-based like the dashboard. |
 | **Students** (`/students`, `/students/[id]`) | Profiles with target vs current, progress timeline, milestones, next goals, full history, export and profile editing (your own). |
 | **Import** (`/import`) | One-time CSV import of the Google Sheet "Log" tab with Person → student mapping, preview, error list and duplicate check. Book can be a Cambridge number, a book name ("Makkar", "Cambridge 18") or a code. |
-| **Theme** | Light, dark or follow the device. Switch it from the user menu or the login page. |
+| **Theme** | Light (default) or dark. Switch it from the user menu or the login page; the choice is remembered per browser. |
 
 ### Rules worth knowing
 
