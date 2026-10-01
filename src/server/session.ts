@@ -1,15 +1,18 @@
 import "server-only";
 import { eq } from "drizzle-orm";
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { cache } from "react";
-import { isEmailAllowed } from "@/lib/allowlist";
-import { allowedEmails, auth } from "./auth";
+import { SESSION_COOKIE } from "@/lib/session-cookie";
+import { lookupSession, type SessionUser } from "./auth";
 import { db } from "./db";
 import { students, type Student } from "./db/schema";
 
-export const getSession = cache(async () => {
-  return auth.api.getSession({ headers: await headers() });
+export const getSession = cache(async (): Promise<{ user: SessionUser } | null> => {
+  const token = (await cookies()).get(SESSION_COOKIE)?.value;
+  if (!token) return null;
+  const user = await lookupSession(token);
+  return user ? { user } : null;
 });
 
 export class AuthError extends Error {}
@@ -22,11 +25,10 @@ function withCallback(path: string, callback: string | null) {
   return callback && callback !== "/" ? `${path}?callbackUrl=${encodeURIComponent(callback)}` : path;
 }
 
-/** Signed-in, invited user — or a redirect to /login or /not-invited. */
+/** Signed-in user — or a redirect to /login. */
 export async function requireUser() {
   const session = await getSession();
   if (!session) redirect(withCallback("/login", await currentPath()));
-  if (!isEmailAllowed(session.user.email, allowedEmails())) redirect("/not-invited");
   return session.user;
 }
 
@@ -49,9 +51,7 @@ export async function requireStudent() {
  */
 export async function authorizeStudent() {
   const session = await getSession();
-  if (!session || !isEmailAllowed(session.user.email, allowedEmails())) {
-    throw new AuthError("You need to sign in again.");
-  }
+  if (!session) throw new AuthError("You need to sign in again.");
   const student = await getStudentForUser(session.user.id);
   if (!student) throw new AuthError("Finish setting up your profile first.");
   return { user: session.user, student };

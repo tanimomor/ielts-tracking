@@ -3,10 +3,11 @@
 import { eq, isNull } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { safeCallbackPath } from "@/lib/allowlist";
+import { safeCallbackPath } from "@/lib/redirect";
 import { fieldErrors, studentProfileSchema, type ActionResult } from "@/lib/validation";
 import { db } from "@/server/db";
 import { students } from "@/server/db/schema";
+import { emailFor } from "@/server/users";
 import { AuthError, authorizeStudent, getStudentForUser, requireUser } from "@/server/session";
 
 function readProfile(formData: FormData) {
@@ -17,7 +18,7 @@ function readProfile(formData: FormData) {
   });
 }
 
-/** Onboarding: create the student for the signed-in Google account. */
+/** Onboarding: create the student for the signed-in account. */
 export async function createStudentAction(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
   const user = await requireUser();
   const parsed = readProfile(formData);
@@ -26,15 +27,15 @@ export async function createStudentAction(_prev: ActionResult | null, formData: 
   }
 
   if (!(await getStudentForUser(user.id))) {
-    const email = user.email.toLowerCase();
+    const email = emailFor(user);
     // A student row may already exist for this email (seeded or imported) —
     // claim it rather than failing on the unique email.
     await db
       .insert(students)
-      .values({ ...parsed.data, email, userId: user.id, avatarUrl: user.image ?? null })
+      .values({ ...parsed.data, email, userId: user.id, avatarUrl: null })
       .onConflictDoUpdate({
         target: students.email,
-        set: { ...parsed.data, userId: user.id, avatarUrl: user.image ?? null },
+        set: { ...parsed.data, userId: user.id },
         setWhere: isNull(students.userId),
       });
   }

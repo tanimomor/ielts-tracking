@@ -5,7 +5,7 @@ type StudentLike = { name: string; color: string; avatarUrl?: string | null };
 
 const SIZES = { xs: "size-5 text-[9px]", sm: "size-7 text-[10px]", md: "size-9 text-xs", lg: "size-14 text-base", xl: "size-20 text-xl" };
 
-/** Google photo with the student's colour as a ring. */
+/** Avatar (photo if set, else initials) with the student's colour as a ring. */
 export function StudentAvatar({
   student,
   size = "md",

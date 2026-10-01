@@ -64,7 +64,7 @@ export default async function StudentPage({ params, searchParams }: PageProps<"/
               {student.name}
               {isMe && <span className="ml-2 align-middle text-sm font-normal text-muted-foreground">(you)</span>}
             </h1>
-            <p className="text-sm text-muted-foreground">{student.email}</p>
+            <p className="text-sm text-muted-foreground">@{student.email.split("@")[0]}</p>
             <p className="mt-1 inline-flex items-center gap-1.5 text-sm">
               <Flag className="size-3.5 text-muted-foreground" aria-hidden /> Target band{" "}
               <span className="font-semibold tabular">{formatBand(student.targetBand)}</span>

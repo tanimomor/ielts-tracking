@@ -1,7 +1,5 @@
-import { getSessionCookie } from "better-auth/cookies";
 import { NextResponse, type NextRequest } from "next/server";
-
-const PUBLIC_PATHS = ["/login", "/not-invited"];
+import { SESSION_COOKIE } from "@/lib/session-cookie";
 
 /**
  * Optimistic check only: no session cookie → /login, remembering where the user
@@ -9,10 +7,9 @@ const PUBLIC_PATHS = ["/login", "/not-invited"];
  */
 export function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
-  if (PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
-    return NextResponse.next();
-  }
-  if (getSessionCookie(request)) {
+  if (pathname === "/login" || pathname.startsWith("/login/")) return NextResponse.next();
+
+  if (request.cookies.has(SESSION_COOKIE)) {
     // Lets server components send users back here after onboarding.
     const requestHeaders = new Headers(request.headers);
     requestHeaders.set("x-pathname", `${pathname}${search}`);
@@ -27,6 +24,6 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // Everything except the auth API, Next internals and static files.
-  matcher: ["/((?!api/auth|_next/static|_next/image|favicon.ico|icon|apple-icon|manifest|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)"],
+  // Everything except Next internals and static files.
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|icon|apple-icon|manifest|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)"],
 };

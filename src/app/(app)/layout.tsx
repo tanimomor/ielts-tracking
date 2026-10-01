@@ -23,7 +23,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
         </Link>
         <SidebarNav />
         <div className="mt-auto border-t pt-3">
-          <UserMenu student={menuStudent} email={user.email} variant="sidebar" />
+          <UserMenu student={menuStudent} subtitle={`@${user.username}`} variant="sidebar" />
         </div>
       </aside>
 
@@ -31,7 +31,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
         <Link href="/log">
           <Brand />
         </Link>
-        <UserMenu student={menuStudent} email={user.email} variant="compact" />
+        <UserMenu student={menuStudent} subtitle={`@${user.username}`} variant="compact" />
       </header>
 
       <main id="main" className="min-w-0 pb-24 md:pb-0">

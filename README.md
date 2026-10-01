@@ -6,13 +6,26 @@ history, see analytics, compare students and export everything to Excel.
 
 - **Next.js 16** (App Router, Server Components, Server Actions, `proxy.ts`)
 - **Neon Postgres** via `@neondatabase/serverless` + **Drizzle ORM** / drizzle-kit migrations
-- **Better Auth** (stable) with **Google** as the only sign-in method, database sessions
+- Simple **username + password** login for two hardcoded accounts, with database sessions
 - **Tailwind CSS 4** + shadcn/ui-style components on Radix, lucide icons, Geist
 - **Recharts** for charts, **ExcelJS** for `.xlsx`, **Zod** for validation, **Vitest** for tests
 
-> Auth library: the original plan named Auth.js v5, which is still only published as a beta.
-> Better Auth is its stable successor (the Auth.js project joined it) and gives the same
-> behaviour here: Google-only sign-in, a Drizzle adapter, and revocable database sessions.
+## Accounts
+
+The two accounts are hardcoded in `src/server/users.ts`:
+
+| Username | Password |
+| --- | --- |
+| `tanim` | `Test#123` |
+| `habiba` | `habiba@123` |
+
+Passwords are stored as **scrypt hashes**, not plain text. To change one, run
+`pnpm hash-password 'new password'` and paste the output into `src/server/users.ts`. To add
+someone, add another entry. Sessions are rows in the `sessions` table: deleting a row signs that
+device out, and removing a user from `users.ts` locks them out even with a live cookie.
+
+> Anyone who can read this repository can see these usernames, and weak passwords can be guessed
+> from their hashes. Keep the GitHub repo **private**, and change the passwords if it isn't.
 
 ---
 
@@ -76,17 +89,7 @@ switches to `node-postgres` for localhost and uses Neon's serverless driver ever
 
 ### Environment variables
 
-| Variable | Purpose |
-| --- | --- |
-| `DATABASE_URL` | Postgres connection string (provided by `vc i neon`) |
-| `AUTH_SECRET` | Random secret for signing session cookies. Generate one with `openssl rand -base64 32` |
-| `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` | Google OAuth client (see below) |
-| `ALLOWED_EMAILS` | Comma-separated Google emails allowed to sign in, e.g. `you@gmail.com,friend@gmail.com` |
-| `AUTH_URL` | Optional. Public base URL. Defaults to `http://localhost:3000` locally and the production domain on Vercel. Set it if you use a custom domain. |
-
-Anyone not in `ALLOWED_EMAILS` sees **"This account isn't invited"**. Removing an email
-blocks that person's next sign-in. To sign someone out everywhere, delete their rows from
-`sessions`.
+Only one: `DATABASE_URL`, the Postgres connection string (`vc i neon` sets it on Vercel).
 
 ### Scripts
 
@@ -96,31 +99,9 @@ blocks that person's next sign-in. To sign someone out everywhere, delete their 
 | `pnpm typecheck` · `pnpm lint` · `pnpm test` | Checks (`pnpm check` runs all three) |
 | `pnpm db:generate` | Create a migration after editing `src/server/db/schema.ts` |
 | `pnpm db:migrate` | Apply migrations to `DATABASE_URL` |
-| `pnpm db:seed` | Seed sample data for the first two `ALLOWED_EMAILS` (or `SEED_EMAILS`) |
+| `pnpm db:seed` | Seed ~3 months of sample practice for `tanim` and `habiba` |
+| `pnpm hash-password '<pw>'` | Hash a new password for `src/server/users.ts` |
 | `pnpm db:studio` | Drizzle Studio |
-
----
-
-## Google Cloud Console setup
-
-1. Go to <https://console.cloud.google.com/> and create (or pick) a project.
-2. **APIs & Services → OAuth consent screen**
-   - User type: **External**.
-   - App name, support email and developer contact email. Scopes: the defaults
-     (`openid`, `email`, `profile`) are all that's needed.
-   - Leave **Publishing status: Testing**.
-   - Under **Test users**, add **both students' Google addresses**. While the app is in Testing
-     mode, only these accounts can complete the Google sign-in.
-3. **APIs & Services → Credentials → Create credentials → OAuth client ID**
-   - Application type: **Web application**.
-   - **Authorized JavaScript origins**: `http://localhost:3000` and `https://<your-domain>`
-   - **Authorized redirect URIs**:
-     - `http://localhost:3000/api/auth/callback/google`
-     - `https://<your-domain>/api/auth/callback/google`
-4. Copy the client ID and secret into `AUTH_GOOGLE_ID` and `AUTH_GOOGLE_SECRET`.
-
-`<your-domain>` is your production domain, e.g. `ielts-tracker.vercel.app`. Vercel preview URLs
-change on every deploy, so Google sign-in only works on the domains you register here.
 
 ---
 
@@ -138,36 +119,27 @@ so each query stays local.
 2. **Add Neon.** In the project, open **Storage → Create Database → Neon** (Marketplace), choose
    region *Singapore* and connect it to the Production and Preview environments. This sets
    `DATABASE_URL`. From a terminal, `vercel link && vc i neon` does the same.
-3. **Add environment variables** under **Settings → Environment Variables**, for Production and
-   Preview:
-   - `AUTH_SECRET`: output of `openssl rand -base64 32`
-   - `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`: from Google Cloud (see above)
-   - `ALLOWED_EMAILS`: e.g. `you@gmail.com,friend@gmail.com`
-   - `AUTH_URL`: only needed for a custom domain, e.g. `https://ielts.example.com`
-4. **Register the domain with Google.** Add `https://<project>.vercel.app` as an authorized
-   JavaScript origin and `https://<project>.vercel.app/api/auth/callback/google` as a redirect URI.
-5. **Redeploy** (Deployments → ⋯ → Redeploy). The build log should show
-   `migrations applied successfully` before `next build`.
-6. **Sign in** with each student's Google account. A student row with a matching email is linked
-   automatically. Otherwise a short onboarding asks for name, target band and colour.
-7. *(Optional)* **Seed or import.** Upload the old sheet on **Import**, or seed sample data from your
-   machine with `vercel env pull .env.local && pnpm db:seed`. The seed replaces the first two
-   students' attempts, so only use it on an empty or dev database. Then press **Sync & refresh** on the
+3. **Redeploy** (Deployments → ⋯ → Redeploy). The build log should show
+   `migrations applied successfully` before `next build`. No other environment variables are needed.
+4. **Log in** as `tanim` or `habiba`. The first login asks for a display name, target band and
+   chart colour (prefilled), unless the seed already created that student.
+5. *(Optional)* **Seed or import.** Upload the old sheet on **Import**, or seed sample data from your
+   machine with `vercel env pull .env.local && pnpm db:seed`. The seed replaces both students'
+   attempts, so only use it on an empty or dev database. Then press **Sync & refresh** on the
    dashboard.
 
-Preview deployments get a new URL every time, and Google only accepts registered redirect URIs.
-That means sign-in works on the production domain, not on previews.
+Old variables from the Google sign-in setup (`AUTH_SECRET`, `AUTH_GOOGLE_ID`,
+`AUTH_GOOGLE_SECRET`, `ALLOWED_EMAILS`, `AUTH_URL`) are no longer used and can be deleted.
 
 ## Project structure
 
 ```
 src/
-  proxy.ts                    # redirects signed-out users to /login?callbackUrl=…
+  proxy.ts                    # redirects logged-out users to /login?callbackUrl=…
   app/
-    login, not-invited, onboarding
+    login, onboarding
     (app)/                    # signed-in shell (sidebar / bottom tabs)
       log, attempts, dashboard, compare, students, students/[id], import
-    api/auth/[...all]         # Better Auth
     api/export/attempts       # filtered list → .xlsx
     api/export/snapshots/[id] # dashboard/compare snapshot → .xlsx
   components/                 # ui/ (shadcn-style), attempts/, charts/, reports/, students/, import/
@@ -180,7 +152,8 @@ src/
     csv-import.ts, milestones.ts, validation.ts
   server/                     # server-only
     db/                       # Drizzle schema + client
-    auth.ts, session.ts       # Better Auth config, requireStudent/authorizeStudent
+    users.ts                  # the hardcoded accounts (scrypt hashes)
+    auth.ts, session.ts       # DB sessions + cookie, requireStudent/authorizeStudent
     actions/                  # Server Actions (Zod + auth + ownership checks)
     queries/                  # paginated reads
     reports/compute.ts        # SQL aggregates for snapshots

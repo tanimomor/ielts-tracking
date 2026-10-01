@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { BrandMark } from "@/components/brand";
 import { ProfileForm } from "@/components/students/profile-form";
-import { safeCallbackPath } from "@/lib/allowlist";
+import { safeCallbackPath } from "@/lib/redirect";
 import { STUDENT_COLORS } from "@/lib/constants";
 import { createStudentAction } from "@/server/actions/students";
 import { listStudents } from "@/server/queries/students";
@@ -33,7 +33,7 @@ export default async function OnboardingPage({ searchParams }: PageProps<"/onboa
         <div className="mt-8">
           <ProfileForm
             action={createStudentAction}
-            defaults={{ name: user.name || user.email.split("@")[0], targetBand: 7, color }}
+            defaults={{ name: user.name, targetBand: 7, color }}
             takenColors={taken}
             callbackUrl={callbackUrl}
             submitLabel="Start tracking"

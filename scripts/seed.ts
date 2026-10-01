@@ -3,8 +3,8 @@
  *
  *   pnpm db:seed
  *
- * Students are created for the first two addresses in ALLOWED_EMAILS (or
- * SEED_EMAILS), so signing in with those Google accounts links to them.
+ * Students are created for the two hardcoded accounts in src/server/users.ts
+ * and linked to them, so logging in as either shows the sample data.
  * Re-running replaces the seeded students' attempts and all snapshots.
  */
 import { config } from "dotenv";
@@ -14,7 +14,8 @@ import { DEFAULT_MISTAKE_TAGS, type Skill } from "../src/lib/constants";
 import { addDays, today } from "../src/lib/dates";
 import { resolveBand, roundIelts } from "../src/lib/scoring";
 import { createDb } from "../src/server/db/client";
-import { attempts, reportSnapshots, students, type NewAttempt } from "../src/server/db/schema";
+import { attempts, reportSnapshots, students, users, type NewAttempt } from "../src/server/db/schema";
+import { USERS, emailFor } from "../src/server/users";
 
 config({ path: [".env.local", ".env"], quiet: true });
 
@@ -35,6 +36,7 @@ const clamp = (x: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, x
 
 type Profile = {
   name: string;
+  userId: string;
   email: string;
   color: string;
   targetBand: number;
@@ -47,25 +49,15 @@ type Profile = {
   weakTags: string[];
 };
 
-function nameFromEmail(email: string, fallback: string) {
-  const local = email.split("@")[0]?.replace(/[._\d]+/g, " ").trim();
-  if (!local) return fallback;
-  return local.replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
 async function main() {
   const url = process.env.DATABASE_URL;
   if (!url) throw new Error("DATABASE_URL is not set");
-  const emails = (process.env.SEED_EMAILS ?? process.env.ALLOWED_EMAILS ?? "")
-    .split(",")
-    .map((e) => e.trim().toLowerCase())
-    .filter(Boolean);
-  const [emailA = "student.a@example.com", emailB = "student.b@example.com"] = emails;
-
+  const [userA, userB] = USERS;
   const profiles: Profile[] = [
     {
-      name: nameFromEmail(emailA, "Student A"),
-      email: emailA,
+      userId: userA.id,
+      name: userA.name,
+      email: emailFor(userA),
       color: "#2a78d6",
       targetBand: 7,
       listening: [0.66, 0.14],
@@ -76,8 +68,9 @@ async function main() {
       weakTags: ["map labelling", "T/F/NG", "time management", "spelling"],
     },
     {
-      name: nameFromEmail(emailB, "Student B"),
-      email: emailB,
+      userId: userB.id,
+      name: userB.name,
+      email: emailFor(userB),
       color: "#eb6834",
       targetBand: 7.5,
       listening: [0.72, 0.1],
@@ -95,12 +88,16 @@ async function main() {
   const span = 91;
 
   for (const p of profiles) {
+    await db
+      .insert(users)
+      .values({ id: p.userId, name: p.name, email: p.email, emailVerified: true })
+      .onConflictDoNothing();
     const [student] = await db
       .insert(students)
-      .values({ name: p.name, email: p.email, color: p.color, targetBand: p.targetBand })
+      .values({ userId: p.userId, name: p.name, email: p.email, color: p.color, targetBand: p.targetBand })
       .onConflictDoUpdate({
         target: students.email,
-        set: { name: p.name, color: p.color, targetBand: p.targetBand },
+        set: { userId: p.userId, name: p.name, color: p.color, targetBand: p.targetBand },
       })
       .returning();
 

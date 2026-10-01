@@ -15,11 +15,11 @@ import { signOutAction } from "@/server/actions/auth";
 
 type Props = {
   student: { id: string; name: string; color: string; avatarUrl: string | null };
-  email: string;
+  subtitle: string;
   variant: "sidebar" | "compact";
 };
 
-export function UserMenu({ student, email, variant }: Props) {
+export function UserMenu({ student, subtitle, variant }: Props) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
@@ -34,14 +34,14 @@ export function UserMenu({ student, email, variant }: Props) {
         {variant === "sidebar" && (
           <span className="min-w-0 flex-1">
             <span className="block truncate text-sm font-medium">{student.name}</span>
-            <span className="block truncate text-xs text-muted-foreground">{email}</span>
+            <span className="block truncate text-xs text-muted-foreground">{subtitle}</span>
           </span>
         )}
       </DropdownMenuTrigger>
       <DropdownMenuContent align={variant === "sidebar" ? "start" : "end"} side={variant === "sidebar" ? "top" : "bottom"} className="w-60">
         <DropdownMenuLabel className="font-normal">
           <span className="block truncate font-medium">{student.name}</span>
-          <span className="block truncate text-xs text-muted-foreground">{email}</span>
+          <span className="block truncate text-xs text-muted-foreground">{subtitle}</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
