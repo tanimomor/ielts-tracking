@@ -57,11 +57,18 @@ export const PARTS_BY_SKILL: Record<Skill, { value: string; label: string }[]> =
   other: [{ value: "", label: "—" }],
 };
 
-/** Typical number of questions, used to pre-fill "out of". */
-export function defaultTotal(skill: Skill, part: string): number | null {
-  if (skill === "listening") return part ? 10 : 40;
-  if (skill === "reading") return part ? 13 : 40;
-  return null;
+/** Questions per section, used to pre-fill "out of". */
+const SECTION_QUESTIONS: Partial<Record<Skill, Record<string, number>>> = {
+  listening: { "1": 10, "2": 10, "3": 10, "4": 10 },
+  reading: { "1": 13, "2": 13, "3": 14 },
+};
+
+/** Typical "out of" for the chosen parts ([] = full test); null when not scored by questions. */
+export function defaultTotal(skill: Skill, parts: string[]): number | null {
+  const sections = SECTION_QUESTIONS[skill];
+  if (!sections) return null;
+  if (parts.length === 0) return 40;
+  return parts.reduce((sum, p) => sum + (sections[p] ?? 0), 0) || null;
 }
 
 export const DEFAULT_MISTAKE_TAGS = [
