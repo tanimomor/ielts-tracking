@@ -9,6 +9,7 @@ import {
   numeric,
   pgEnum,
   pgTable,
+  bigserial,
   serial,
   text,
   timestamp,
@@ -138,6 +139,47 @@ export const attempts = pgTable(
   ],
 );
 
+export const NOTE_COLORS = ["default", "yellow", "green", "blue", "pink", "purple", "orange", "teal"] as const;
+
+/** Keep-style notes. Private unless shared with the group; only the author can change them. */
+export const notes = pgTable(
+  "notes",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    studentId: uuid("student_id")
+      .notNull()
+      .references(() => students.id, { onDelete: "cascade" }),
+    title: text("title").notNull().default(""),
+    body: text("body").notNull().default(""),
+    color: text("color").notNull().default("default"),
+    pinned: boolean("pinned").notNull().default(false),
+    shared: boolean("shared").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("notes_student_updated_idx").on(t.studentId, t.updatedAt),
+    index("notes_shared_idx").on(t.shared),
+    check("notes_color_valid", sql`${t.color} in ('default','yellow','green','blue','pink','purple','orange','teal')`),
+    check("notes_not_empty", sql`length(${t.title}) + length(${t.body}) > 0`),
+    check("notes_size", sql`length(${t.title}) <= 200 and length(${t.body}) <= 20000`),
+  ],
+);
+
+/** Append-only change feed that powers live updates (/api/events). Pruned after a week. */
+export const activity = pgTable(
+  "activity",
+  {
+    id: bigserial("id", { mode: "number" }).primaryKey(),
+    kind: text("kind").notNull(), // attempt | book | note | report | import | profile
+    action: text("action").notNull(), // created | updated | deleted | synced
+    studentId: uuid("student_id").references(() => students.id, { onDelete: "cascade" }),
+    label: text("label").notNull().default(""),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("activity_created_idx").on(t.createdAt)],
+);
+
 export const snapshotKindEnum = pgEnum("snapshot_kind", ["dashboard", "compare"]);
 export const scopeTypeEnum = pgEnum("snapshot_scope", ["student", "students", "all"]);
 export const periodTypeEnum = pgEnum("period_type", ["month", "year", "all", "custom"]);
@@ -173,6 +215,7 @@ export const reportSnapshots = pgTable(
 
 export type Student = typeof students.$inferSelect;
 export type BookSeries = typeof bookSeries.$inferSelect;
+export type Note = typeof notes.$inferSelect;
 export type Attempt = typeof attempts.$inferSelect;
 export type NewAttempt = typeof attempts.$inferInsert;
 export type ReportSnapshot = typeof reportSnapshots.$inferSelect;

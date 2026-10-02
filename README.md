@@ -40,6 +40,8 @@ device out, and removing a user from `users.ts` locks them out even with a live 
 | **Scoreboard** (`/scoreboard`) | Everyone ranked by estimated overall band, category champions (most practice, streak, most improved, best per skill), a head-to-head table and a weekly practice race. Snapshot-based like the dashboard. |
 | **Students** (`/students`, `/students/[id]`) | Profiles with target vs current, progress timeline, milestones, next goals, full history, export and profile editing (your own). |
 | **Import** (`/import`) | One-time CSV import of the Google Sheet "Log" tab with Person → student mapping, preview, error list and duplicate check. Book can be a Cambridge number, a book name ("Makkar", "Cambridge 18") or a code. |
+| **Notes** (`/notes`) | Google Keep–style cards: "Take a note…" box, pastel colours, pin, search. Notes are private unless you switch them to **Shared with group**; others see shared notes read-only. |
+| **Live updates** | When someone logs, edits or deletes an attempt, adds a book, shares a note or imports, everyone else gets a toast and the open page updates in place (Server-Sent Events from `/api/events`, paused while the tab is hidden). The sidebar shows **Live**. |
 | **Theme** | Light (default) or dark. Switch it from the user menu or the login page; the choice is remembered per browser. |
 
 ### Rules worth knowing
@@ -54,9 +56,10 @@ device out, and removing a user from `users.ts` locks them out even with a live 
   skipped, so it's safe for both of you to upload the same file.
 - **Dates** are calendar dates in **Asia/Dhaka**. "Today", week/month presets and streaks all use
   that zone. Weeks start on Monday.
-- **Reports are never computed on page load.** *Sync & refresh* runs a set of `GROUP BY` queries
-  in Postgres, shapes the result (`src/lib/reports`) and stores it in `report_snapshots`. Only
-  the newest 10 snapshots are kept per scope and period.
+- **Reports are snapshots.** The first time a view (scope + period) is opened it is computed and
+  saved; after that it only changes when someone presses *Sync & refresh*, which runs a set of
+  `GROUP BY` queries in Postgres, shapes the result (`src/lib/reports`) and stores it in
+  `report_snapshots`. Only the newest 10 snapshots are kept per scope and period.
 
 ---
 

@@ -23,7 +23,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
 
   return (
     <main className="relative grid min-h-dvh bg-background lg:grid-cols-[1fr_1.1fr]">
-      <div className="h-2 bg-brand lg:hidden" aria-hidden />
+      <div className="h-1.5 bg-violet-300 lg:hidden" aria-hidden />
       <ThemeSwitch className="absolute top-4 right-4 z-10 lg:right-auto lg:left-4" />
       <div className="grid place-items-center px-6 py-12">
         <div className="w-full max-w-sm">
@@ -40,17 +40,22 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
         </div>
       </div>
 
-      <aside className="relative hidden overflow-hidden bg-brand p-12 text-white lg:flex lg:flex-col lg:justify-center" aria-hidden>
-        <span className="absolute -top-24 -right-24 size-96 rounded-full bg-white/10" />
-        <span className="absolute -bottom-32 -left-16 size-[28rem] rounded-full bg-white/10" />
+      <aside
+        className="relative hidden overflow-hidden bg-violet-50 p-12 lg:flex lg:flex-col lg:justify-center dark:bg-violet-950/40"
+        aria-hidden
+      >
+        <span className="absolute -top-24 -right-24 size-96 rounded-full bg-violet-100 dark:bg-violet-500/10" />
+        <span className="absolute -bottom-32 -left-16 size-[28rem] rounded-full bg-violet-100 dark:bg-violet-500/10" />
         <div className="relative max-w-md">
-          <div className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-sm font-medium">
+          <div className="inline-flex items-center gap-2 rounded-full bg-violet-600 px-3 py-1 text-sm font-medium text-white">
             <Trophy className="size-4" /> Band 7.5 or bust
           </div>
-          <p className="mt-6 text-4xl leading-tight font-bold tracking-tight">Practise together. Climb together.</p>
+          <p className="mt-6 text-4xl leading-tight font-bold tracking-tight text-foreground">
+            Practise together. <span className="text-brand">Climb together.</span>
+          </p>
           <ul className="mt-10 grid grid-cols-2 gap-3">
             {CHIPS.map(({ label, icon: Icon, bg }) => (
-              <li key={label} className="flex items-center gap-3 rounded-2xl bg-white/95 p-3 text-sm font-semibold text-[#0c111d] shadow-lg">
+              <li key={label} className="flex items-center gap-3 rounded-2xl border bg-background p-3 text-sm font-semibold text-foreground shadow-sm">
                 <span className="grid size-9 place-items-center rounded-xl text-white" style={{ backgroundColor: bg }}>
                   <Icon className="size-4" />
                 </span>

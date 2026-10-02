@@ -12,6 +12,7 @@ import { isValidBand, rawToBand } from "@/lib/scoring";
 import type { ActionResult } from "@/lib/validation";
 import { db } from "@/server/db";
 import { attempts, bookSeries, type NewAttempt } from "@/server/db/schema";
+import { recordActivity } from "@/server/activity";
 import { AuthError, authorizeStudent } from "@/server/session";
 
 const rowSchema = z
@@ -133,6 +134,9 @@ export async function importAttemptsAction(raw: unknown): Promise<ActionResult<{
         await tx.insert(attempts).values(fresh.slice(i, i + 500));
       }
     });
+    if (fresh.length) {
+      await recordActivity({ kind: "import", action: "created", studentId: p.student.id, label: `${fresh.length} attempts` });
+    }
     revalidatePath("/", "layout");
     return { ok: true, data: { inserted: fresh.length, skipped: p.rows.length - fresh.length } };
   } catch (e) {

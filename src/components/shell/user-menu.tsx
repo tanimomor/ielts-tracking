@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { LogOut, Upload, UserRound } from "lucide-react";
+import { LogOut, Upload, UserRound, Users } from "lucide-react";
 import { StudentAvatar } from "@/components/students/student-avatar";
 import { ThemeSwitch } from "@/components/theme";
 import {
@@ -48,6 +48,11 @@ export function UserMenu({ student, subtitle, variant }: Props) {
         <DropdownMenuItem asChild>
           <Link href={`/students/${student.id}`}>
             <UserRound /> My profile
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild className="md:hidden">
+          <Link href="/students">
+            <Users /> Students
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild className="md:hidden">

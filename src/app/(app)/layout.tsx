@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Brand } from "@/components/brand";
+import { LiveBadge, LiveUpdates } from "@/components/live-updates";
 import { QuickLogButton, QuickLogFab, QuickLogProvider } from "@/components/log/quick-log";
 import { BottomTabs, SidebarNav } from "@/components/shell/nav-links";
 import { UserMenu } from "@/components/shell/user-menu";
@@ -14,6 +15,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
   const menuStudent = { id: student.id, name: student.name, color: student.color, avatarUrl: student.avatarUrl };
 
   return (
+    <LiveUpdates me={student.id}>
     <QuickLogProvider today={today()} series={series} tagSuggestions={tags} student={menuStudent}>
       <div className="min-h-dvh md:grid md:grid-cols-[15rem_1fr]">
         <a
@@ -30,6 +32,9 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
           <QuickLogButton className="mb-5 w-full" />
           <SidebarNav />
           <div className="mt-auto border-t pt-3">
+            <div className="mb-2 px-2">
+              <LiveBadge />
+            </div>
             <UserMenu student={menuStudent} subtitle={`@${user.username}`} variant="sidebar" />
           </div>
         </aside>
@@ -49,5 +54,6 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
         <BottomTabs />
       </div>
     </QuickLogProvider>
+    </LiveUpdates>
   );
 }

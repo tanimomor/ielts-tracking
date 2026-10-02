@@ -13,7 +13,7 @@
   --card-foreground: #0c111d;
   --popover: #ffffff;
   --popover-foreground: #0c111d;
-  /* Accent: vivid violet (5.7:1 on white), paired with fuchsia in gradients. */
+  /* Accent: vivid violet (5.7:1 on white). */
   --primary: #7c3aed;
   --primary-foreground: #ffffff;
   --primary-soft: #f3ecff;
@@ -158,23 +158,12 @@
 }
 
 @layer utilities {
-  /* Energetic brand gradient used on hero tiles and primary calls to action. */
+  /* Solid brand accent (no gradients). */
   .bg-brand {
-    background-image: linear-gradient(135deg, #7c3aed 0%, #c026d3 55%, #db2777 100%);
+    background-color: var(--primary);
   }
   .text-brand {
-    background-image: linear-gradient(90deg, #7c3aed, #db2777);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
-  /* Soft colourful glow behind page tops. */
-  .page-glow {
-    background-image:
-      radial-gradient(40rem 16rem at 10% -4rem, rgb(124 58 237 / 0.12), transparent 70%),
-      radial-gradient(36rem 14rem at 90% -6rem, rgb(219 39 119 / 0.08), transparent 70%),
-      radial-gradient(30rem 12rem at 55% -6rem, rgb(14 165 233 / 0.07), transparent 70%);
-    background-repeat: no-repeat;
+    color: var(--primary);
   }
 }
 

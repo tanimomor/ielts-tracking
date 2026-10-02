@@ -204,7 +204,7 @@ export function AttemptForm({ mode, attemptId, initial, maxDate, series: initial
   return (
     <form onSubmit={submit} noValidate className={cn("grid gap-4", className)}>
       {/* 1 — what & when */}
-      <Section step={1} title="Practice" icon={CalendarDays} tone="linear-gradient(135deg,#7c3aed,#db2777)">
+      <Section step={1} title="Practice" icon={CalendarDays} tone="#7c3aed">
         <ToggleGroup
           type="single"
           value={values.skill}
@@ -219,10 +219,10 @@ export function AttemptForm({ mode, attemptId, initial, maxDate, series: initial
               <ToggleGroupItem
                 key={s}
                 value={s}
-                className="h-12 flex-col gap-0.5 text-xs data-[state=on]:border-transparent data-[state=on]:text-white data-[state=on]:shadow-md sm:h-14"
-                style={on ? { background: SKILL_SOLID[s] } : undefined}
+                className="h-12 flex-col gap-0.5 text-xs data-[state=on]:border-2 data-[state=on]:font-semibold data-[state=on]:text-foreground sm:h-14"
+                style={on ? { borderColor: SKILL_SOLID[s], backgroundColor: `color-mix(in oklab, ${SKILL_SOLID[s]} 10%, var(--background))` } : undefined}
               >
-                <Icon className="size-[18px]" aria-hidden />
+                <Icon className="size-[18px]" style={{ color: SKILL_SOLID[s] }} aria-hidden />
                 {SKILL_LABELS[s]}
               </ToggleGroupItem>
             );
@@ -249,7 +249,7 @@ export function AttemptForm({ mode, attemptId, initial, maxDate, series: initial
         step={2}
         title="Book & test"
         icon={BookOpenText}
-        tone="linear-gradient(135deg,#0ea5e9,#4f46e5)"
+        tone="#2563eb"
         aside={code ? <span className="rounded-md bg-muted px-2 py-0.5 font-mono text-xs font-semibold">{code}</span> : null}
       >
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-[1.4fr_1fr_1fr]">
@@ -374,7 +374,7 @@ export function AttemptForm({ mode, attemptId, initial, maxDate, series: initial
       </Section>
 
       {/* 3 — result */}
-      <Section step={3} title="Result" icon={Target} tone="linear-gradient(135deg,#f97316,#e11d48)">
+      <Section step={3} title="Result" icon={Target} tone="#ea580c">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
           <div className="grid flex-1 gap-2">
             {(scoredByQuestions || values.skill === "other") && (
@@ -457,7 +457,7 @@ export function AttemptForm({ mode, attemptId, initial, maxDate, series: initial
           onClick={() => setDetailsOpen((o) => !o)}
           className="flex w-full cursor-pointer items-center gap-3 rounded-2xl p-4 text-left focus-visible:ring-[3px] focus-visible:ring-ring/40 focus-visible:outline-none sm:px-5"
         >
-          <span className="grid size-8 place-items-center rounded-xl text-white shadow-sm" style={{ background: "linear-gradient(135deg,#10b981,#0d9488)" }}>
+          <span className="grid size-8 place-items-center rounded-xl text-white shadow-sm" style={{ background: "#059669" }}>
             <ClipboardList className="size-4" aria-hidden />
           </span>
           <span className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Step 4</span>
@@ -581,12 +581,14 @@ function BandPreview({
       aria-live="polite"
       className={cn(
         "flex items-center gap-3 rounded-2xl px-4 py-3 sm:min-w-44 sm:flex-col sm:items-start sm:gap-1",
-        lit ? "text-white shadow-md" : "bg-muted text-muted-foreground",
+        lit ? "border text-foreground" : "bg-muted text-muted-foreground",
       )}
-      style={lit ? { background: `linear-gradient(135deg, ${color}, #6d28d9)` } : undefined}
+      style={lit ? { borderColor: color, backgroundColor: `color-mix(in oklab, ${color} 10%, var(--background))` } : undefined}
     >
-      <span className="text-4xl leading-none font-bold tracking-tight tabular">{value}</span>
-      <span className={cn("text-xs font-medium", lit && "text-white/90")}>
+      <span className="text-4xl leading-none font-bold tracking-tight tabular" style={lit ? { color } : undefined}>
+        {value}
+      </span>
+      <span className={cn("text-xs font-medium", lit && "text-muted-foreground")}>
         {hint}
         {band != null && percent != null ? ` · ${Math.round(percent)}%` : ""}
       </span>

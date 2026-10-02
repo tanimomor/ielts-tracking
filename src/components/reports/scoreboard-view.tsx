@@ -3,7 +3,8 @@
 import { Crown, Flame, Medal, Sparkles, Target, TrendingUp, Trophy } from "lucide-react";
 import { BarSeriesChart } from "@/components/charts/bar-series-chart";
 import { ChartCard, MiniTable, NoData } from "@/components/charts/chart-card";
-import { SKILL_ICONS, SKILL_SOLID } from "@/components/skill-icon";
+import { SKILL_ICONS } from "@/components/skill-icon";
+import { TONES, type Tone } from "@/components/tones";
 import { Card } from "@/components/ui/card";
 import { CORE_SKILLS, SKILL_LABELS } from "@/lib/constants";
 import { formatDateShort } from "@/lib/dates";
@@ -111,10 +112,10 @@ export function rankStudents(students: StudentReport[]): StudentReport[] {
   );
 }
 
-const PODIUM = [
-  { label: "1st", bg: "linear-gradient(135deg,#b45309,#c2410c)", icon: Crown },
-  { label: "2nd", bg: "linear-gradient(135deg,#4f46e5,#7c3aed)", icon: Medal },
-  { label: "3rd", bg: "linear-gradient(135deg,#0369a1,#0f766e)", icon: Medal },
+const PODIUM: { label: string; tone: Tone; icon: React.ComponentType<{ className?: string }> }[] = [
+  { label: "1st", tone: "amber", icon: Crown },
+  { label: "2nd", tone: "violet", icon: Medal },
+  { label: "3rd", tone: "sky", icon: Medal },
 ];
 
 function Podium({ ranked }: { ranked: StudentReport[] }) {
@@ -122,16 +123,13 @@ function Podium({ ranked }: { ranked: StudentReport[] }) {
     <ol className={cn("grid gap-3", ranked.length === 2 ? "sm:grid-cols-2" : "sm:grid-cols-2 lg:grid-cols-3")}>
       {ranked.map((s, i) => {
         const p = PODIUM[i];
+        const tone = p ? TONES[p.tone] : null;
         const Icon = p?.icon ?? Trophy;
         return (
-          <li
-            key={s.studentId}
-            className={cn("relative overflow-hidden rounded-2xl p-5 shadow-md", p ? "text-white" : "border bg-card")}
-            style={p ? { background: p.bg } : undefined}
-          >
+          <li key={s.studentId} className={cn("relative overflow-hidden rounded-2xl border p-5 shadow-sm", tone ? tone.tile : "bg-card")}>
             <div className="flex items-center gap-3">
               <span
-                className="grid size-11 place-items-center rounded-full text-sm font-bold ring-2 ring-white/70"
+                className="grid size-11 place-items-center rounded-full text-sm font-bold ring-2 ring-background"
                 style={{ backgroundColor: s.color, color: readableTextOn(s.color) }}
                 aria-hidden
               >
@@ -139,20 +137,25 @@ function Podium({ ranked }: { ranked: StudentReport[] }) {
               </span>
               <div className="min-w-0 flex-1">
                 <div className="truncate text-lg font-semibold">{s.name}</div>
-                <div className={cn("text-xs", p ? "text-white/85" : "text-muted-foreground")}>
+                <div className="text-xs text-muted-foreground">
                   {pluralize(s.attempts, "attempt")} · {pluralize(s.practiceDays, "day")}
                 </div>
               </div>
-              <span className={cn("inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold", p ? "bg-white/20" : "bg-muted")}>
+              <span
+                className={cn(
+                  "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold",
+                  tone ? cn(tone.chip, "text-white") : "bg-muted",
+                )}
+              >
                 <Icon className="size-3.5" aria-hidden /> {p?.label ?? `${i + 1}th`}
               </span>
             </div>
             <div className="mt-4 flex items-end justify-between gap-3">
               <div>
-                <div className={cn("text-xs font-medium", p ? "text-white/85" : "text-muted-foreground")}>Overall band</div>
-                <div className="text-5xl leading-none font-bold tracking-tighter tabular">{formatBand(s.overallBand)}</div>
+                <div className="text-xs font-medium text-muted-foreground">Overall band</div>
+                <div className={cn("text-5xl leading-none font-bold tracking-tighter tabular", tone?.text)}>{formatBand(s.overallBand)}</div>
               </div>
-              <div className={cn("text-right text-xs", p ? "text-white/90" : "text-muted-foreground")}>
+              <div className="text-right text-xs text-muted-foreground">
                 <div className="inline-flex items-center gap-1">
                   <Target className="size-3.5" aria-hidden /> target {formatBand(s.targetBand)}
                 </div>
@@ -168,23 +171,31 @@ function Podium({ ranked }: { ranked: StudentReport[] }) {
   );
 }
 
-type Champion = { title: string; icon: React.ComponentType<{ className?: string }>; bg: string; get: (r: StudentReport) => number | null; fmt: (v: number) => string };
+type Champion = {
+  title: string;
+  icon: React.ComponentType<{ className?: string }>;
+  tone: Tone;
+  get: (r: StudentReport) => number | null;
+  fmt: (v: number) => string;
+};
+
+const SKILL_TONE = { listening: "blue", reading: "orange", writing: "emerald", speaking: "yellow" } as const;
 
 const CHAMPIONS: Champion[] = [
-  { title: "Most practice", icon: Sparkles, bg: "linear-gradient(135deg,#be185d,#7e22ce)", get: (r) => r.attempts || null, fmt: (v) => pluralize(v, "attempt") },
-  { title: "Most active days", icon: Trophy, bg: "linear-gradient(135deg,#c2410c,#b91c1c)", get: (r) => r.practiceDays || null, fmt: (v) => pluralize(v, "day") },
-  { title: "Hottest streak", icon: Flame, bg: "linear-gradient(135deg,#b45309,#c2410c)", get: (r) => r.currentStreak || null, fmt: (v) => pluralize(v, "day") },
+  { title: "Most practice", icon: Sparkles, tone: "pink", get: (r) => r.attempts || null, fmt: (v) => pluralize(v, "attempt") },
+  { title: "Most active days", icon: Trophy, tone: "violet", get: (r) => r.practiceDays || null, fmt: (v) => pluralize(v, "day") },
+  { title: "Hottest streak", icon: Flame, tone: "amber", get: (r) => r.currentStreak || null, fmt: (v) => pluralize(v, "day") },
   {
     title: "Most improved",
     icon: TrendingUp,
-    bg: "linear-gradient(135deg,#047857,#0e7490)",
+    tone: "emerald",
     get: (r) => (r.overallBand != null && r.previous?.overallBand != null ? r.overallBand - r.previous.overallBand : null),
     fmt: (v) => `${v > 0 ? "+" : ""}${v.toFixed(1)} overall`,
   },
   ...CORE_SKILLS.map<Champion>((s) => ({
     title: `Best ${SKILL_LABELS[s]}`,
     icon: SKILL_ICONS[s],
-    bg: `linear-gradient(135deg, ${SKILL_SOLID[s]}, #4c1d95)`,
+    tone: SKILL_TONE[s],
     get: (r) => r.skills[s].avgBand,
     fmt: (v) => `${v.toFixed(2)} avg band`,
   })),
@@ -202,20 +213,24 @@ function Champions({ students }: { students: StudentReport[] }) {
           const best = scored.length ? Math.max(...scored.map((x) => x.v)) : null;
           const winners = best == null || (c.title === "Most improved" && best <= 0) ? [] : scored.filter((x) => x.v === best);
           const Icon = c.icon;
+          const tone = TONES[c.tone];
           return (
-            <li key={c.title} className="rounded-2xl p-4 text-white shadow-md" style={{ background: c.bg }}>
-              <div className="flex items-center gap-2 text-xs font-semibold tracking-wide text-white/90 uppercase">
-                <Icon className="size-4" aria-hidden /> {c.title}
+            <li key={c.title} className={cn("rounded-2xl border p-4 shadow-xs", tone.tile)}>
+              <div className="flex items-center gap-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                <span className={cn("grid size-6 place-items-center rounded-md text-white", tone.chip)}>
+                  <Icon className="size-3.5" aria-hidden />
+                </span>
+                {c.title}
               </div>
               {winners.length ? (
                 <>
-                  <div className="mt-3 truncate text-lg font-bold">
+                  <div className={cn("mt-3 truncate text-lg font-bold", tone.text)}>
                     {winners.length > 1 ? `Tie: ${winners.map((w) => w.s.name).join(" & ")}` : winners[0].s.name}
                   </div>
-                  <div className="text-sm text-white/90 tabular">{c.fmt(best!)}</div>
+                  <div className="text-sm text-muted-foreground tabular">{c.fmt(best!)}</div>
                 </>
               ) : (
-                <div className="mt-3 text-sm text-white/85">Up for grabs</div>
+                <div className="mt-3 text-sm text-muted-foreground">Up for grabs</div>
               )}
             </li>
           );

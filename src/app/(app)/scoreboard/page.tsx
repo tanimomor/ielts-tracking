@@ -6,7 +6,7 @@ import { ScoreboardFrame } from "@/components/reports/scoreboard-frame";
 import { ScoreboardView } from "@/components/reports/scoreboard-view";
 import { formatDateTime, today } from "@/lib/dates";
 import { parsePeriod, periodToParams } from "@/lib/reports/period";
-import { latestSnapshot, scopeKeyFor } from "@/server/queries/snapshots";
+import { latestOrCreateSnapshot } from "@/server/reports/store";
 import { listStudents } from "@/server/queries/students";
 import { requireStudent } from "@/server/session";
 
@@ -14,12 +14,13 @@ export const metadata: Metadata = { title: "Scoreboard" };
 
 /** Everyone ranked, from the latest saved snapshot (Sync & refresh recomputes). */
 export default async function ScoreboardPage({ searchParams }: PageProps<"/scoreboard">) {
-  await requireStudent();
+  const { student } = await requireStudent();
   const params = await searchParams;
   const date = today();
   const students = await listStudents();
-  const period = parsePeriod(params, date);
-  const snapshot = await latestSnapshot("compare", scopeKeyFor("compare", students.map((s) => s.id)), period);
+  // The scoreboard opens on all time unless a period is picked.
+  const period = parsePeriod(params.period ? params : { ...params, period: "all" }, date);
+  const snapshot = await latestOrCreateSnapshot("compare", students.map((s) => s.id), period, student.id);
   const syncedBy = snapshot?.generatedBy ? students.find((s) => s.id === snapshot.generatedBy)?.name ?? null : null;
 
   return (
@@ -37,8 +38,8 @@ export default async function ScoreboardPage({ searchParams }: PageProps<"/score
         ) : (
           <EmptyState
             icon={RefreshCw}
-            title="No scoreboard for this period yet"
-            description="Press Sync & refresh to rank everyone from the latest attempts. It stays fixed until someone syncs again."
+            title="Couldn't build the scoreboard"
+            description="Press Sync & refresh to try again."
             className="py-20"
           />
         )}

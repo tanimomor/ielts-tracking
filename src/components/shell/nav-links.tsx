@@ -1,9 +1,16 @@
 "use client";
 
-import Link from "next/link";
+import { Loader2 } from "lucide-react";
+import Link, { useLinkStatus } from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { NAV_ITEMS } from "./nav";
+
+/** Spinner on the clicked tab while its page loads (the current page stays visible). */
+function Pending({ className }: { className?: string }) {
+  const { pending } = useLinkStatus();
+  return pending ? <Loader2 className={cn("size-3.5 animate-spin text-muted-foreground", className)} aria-label="Loading" /> : null;
+}
 
 function isActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
@@ -35,6 +42,7 @@ export function SidebarNav() {
               <Icon className="size-4" aria-hidden />
             </span>
             {label}
+            <Pending className="ml-auto" />
           </Link>
         );
       })}
@@ -68,7 +76,10 @@ export function BottomTabs() {
                 >
                   <Icon className="size-5" aria-hidden />
                 </span>
-                {label}
+                <span className="inline-flex items-center gap-1">
+                  {label}
+                  <Pending className="size-3" />
+                </span>
               </Link>
             </li>
           );

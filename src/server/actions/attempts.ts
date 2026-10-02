@@ -7,6 +7,7 @@ import { resolveBand } from "@/lib/scoring";
 import { attemptInputSchema, fieldErrors, type ActionResult, type AttemptInput } from "@/lib/validation";
 import { db } from "@/server/db";
 import { attempts, bookSeries } from "@/server/db/schema";
+import { recordActivity } from "@/server/activity";
 import { AuthError, authorizeStudent } from "@/server/session";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -59,6 +60,12 @@ function rowFrom(input: AttemptInput, prefix: string | null) {
   };
 }
 
+/** "c17t1 · Listening · band 7.5" for toasts on other screens. */
+function describe(r: { code: string; skill: string; band: number | null; rawScore: number | null; total: number | null }) {
+  const score = r.band != null ? `band ${r.band.toFixed(1)}` : r.rawScore != null && r.total != null ? `${r.rawScore}/${r.total}` : "";
+  return [r.code, r.skill[0]!.toUpperCase() + r.skill.slice(1), score].filter(Boolean).join(" · ");
+}
+
 function revalidate() {
   revalidatePath("/attempts");
   revalidatePath("/students", "layout");
@@ -88,6 +95,7 @@ export async function createAttemptAction(raw: unknown): Promise<ActionResult<Sa
       .insert(attempts)
       .values({ ...built.row, studentId: student.id })
       .returning({ id: attempts.id, code: attempts.code, band: attempts.band });
+    await recordActivity({ kind: "attempt", action: "created", studentId: student.id, label: describe(built.row) });
     revalidate();
     return { ok: true, data: row! };
   });
@@ -109,6 +117,7 @@ export async function updateAttemptAction(id: string, raw: unknown): Promise<Act
       .where(and(eq(attempts.id, id), eq(attempts.studentId, student.id)))
       .returning({ id: attempts.id, code: attempts.code, band: attempts.band });
     if (!row) return { ok: false, error: "You can only edit your own attempts." };
+    await recordActivity({ kind: "attempt", action: "updated", studentId: student.id, label: describe(built.row) });
     revalidate();
     return { ok: true, data: row! };
   });
@@ -121,8 +130,9 @@ export async function deleteAttemptAction(id: string): Promise<ActionResult> {
     const deleted = await db
       .delete(attempts)
       .where(and(eq(attempts.id, id), eq(attempts.studentId, student.id)))
-      .returning({ id: attempts.id });
+      .returning({ id: attempts.id, code: attempts.code, skill: attempts.skill });
     if (!deleted.length) return { ok: false, error: "You can only delete your own attempts." };
+    await recordActivity({ kind: "attempt", action: "deleted", studentId: student.id, label: deleted[0].code || deleted[0].skill });
     revalidate();
     return { ok: true, data: null };
   });

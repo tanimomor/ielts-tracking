@@ -19,7 +19,7 @@ import { buildMilestones, nextGoals } from "@/lib/milestones";
 import { parsePeriod } from "@/lib/reports/period";
 import { formatBand } from "@/lib/scoring";
 import { listAttempts } from "@/server/queries/attempts";
-import { latestSnapshot, scopeKeyFor } from "@/server/queries/snapshots";
+import { latestOrCreateSnapshot } from "@/server/reports/store";
 import { getStudent, listStudents, studentMilestoneRows } from "@/server/queries/students";
 import { listSeries } from "@/server/queries/books";
 import { listTagSuggestions } from "@/server/queries/tags";
@@ -43,7 +43,7 @@ export default async function StudentPage({ params, searchParams }: PageProps<"/
 
   const [all, snapshot, history, tags, milestoneRows, series] = await Promise.all([
     listStudents(),
-    latestSnapshot("dashboard", scopeKeyFor("dashboard", [student.id]), allTime),
+    latestOrCreateSnapshot("dashboard", [student.id], allTime, me.id),
     listAttempts(filters),
     listTagSuggestions(),
     studentMilestoneRows(student.id),
@@ -93,7 +93,7 @@ export default async function StudentPage({ params, searchParams }: PageProps<"/
           {snapshot ? (
             <ProfileProgress payload={snapshot.payload} color={student.color} />
           ) : (
-            <EmptyState icon={RefreshCw} title="No progress snapshot yet" description="Press Sync & refresh to build the all-time progress view." />
+            <EmptyState icon={RefreshCw} title="Couldn't build the progress view" description="Press Sync & refresh to try again." />
           )}
         </ProfileSync>
       </section>

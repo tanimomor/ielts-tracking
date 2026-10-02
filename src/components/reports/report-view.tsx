@@ -8,6 +8,7 @@ import { HBarChart } from "@/components/charts/hbar-chart";
 import { LineTrendChart } from "@/components/charts/line-trend-chart";
 import { SkillRadar } from "@/components/charts/skill-radar";
 import { SKILL_COLORS, SKILL_ICONS, SKILL_SOLID } from "@/components/skill-icon";
+import { TONES } from "@/components/tones";
 import { Card } from "@/components/ui/card";
 import { CORE_SKILLS, SKILLS, SKILL_LABELS, type CoreSkill } from "@/lib/constants";
 import { bookName } from "@/lib/books";
@@ -93,26 +94,26 @@ function Hero({ r, payload }: { r: StudentReport; payload: ReportPayload }) {
 
   return (
     <div className="grid gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
-      <Card className="relative gap-0 overflow-hidden border-0 bg-brand px-6 py-6 text-white shadow-lg shadow-fuchsia-600/20">
-        <span aria-hidden className="absolute -top-16 -right-10 size-56 rounded-full bg-white/10" />
-        <span aria-hidden className="absolute -bottom-20 left-1/3 size-48 rounded-full bg-white/10" />
-        <div className="relative text-sm font-medium text-white/85">Estimated overall band</div>
+      <Card className={cn("relative gap-0 overflow-hidden px-6 py-6 shadow-sm", TONES.violet.tile)}>
+        <span aria-hidden className="absolute -top-16 -right-10 size-56 rounded-full bg-violet-100/70 dark:bg-violet-500/10" />
+        <span aria-hidden className="absolute -bottom-20 left-1/3 size-48 rounded-full bg-violet-100/70 dark:bg-violet-500/10" />
+        <div className="relative text-sm font-medium text-muted-foreground">Estimated overall band</div>
         <div className="relative mt-2 flex items-end gap-4">
-          <span className={cn("text-7xl leading-none font-bold tracking-tighter tabular md:text-8xl", r.overallBand == null && "text-white/60")}>
+          <span className={cn("text-7xl leading-none font-bold tracking-tighter tabular md:text-8xl", r.overallBand == null ? "text-muted-foreground/50" : TONES.violet.text)}>
             {formatBand(r.overallBand)}
           </span>
           <div className="mb-2 grid gap-1">
             {r.previous && r.overallBand != null && r.previous.overallBand != null && (
-              <Delta value={r.overallBand - r.previous.overallBand} label={prevLabel} onDark />
+              <Delta value={r.overallBand - r.previous.overallBand} label={prevLabel} />
             )}
             {r.targetBand != null && (
-              <span className="inline-flex items-center gap-1 text-sm text-white/90">
+              <span className="inline-flex items-center gap-1 text-sm text-muted-foreground">
                 <Target className="size-3.5" aria-hidden /> Target {formatBand(r.targetBand)}
               </span>
             )}
           </div>
         </div>
-        <p className="relative mt-4 text-sm text-white/90">
+        <p className="relative mt-4 text-sm text-muted-foreground">
           {r.overallBand == null
             ? missing.length === 4
               ? "Log banded attempts in all four skills to see an estimate."
@@ -123,9 +124,9 @@ function Hero({ r, payload }: { r: StudentReport; payload: ReportPayload }) {
         </p>
         {r.targetBand != null && r.overallBand != null && (
           <div className="relative mt-4" aria-hidden>
-            <div className="relative h-2.5 rounded-full bg-white/25">
-              <div className="absolute inset-y-0 left-0 rounded-full bg-white" style={{ width: `${(r.overallBand / 9) * 100}%` }} />
-              <div className="absolute -top-1 h-[18px] w-1 rounded bg-amber-300" style={{ left: `${(r.targetBand / 9) * 100}%` }} />
+            <div className="relative h-2.5 rounded-full bg-violet-100 dark:bg-violet-950">
+              <div className="absolute inset-y-0 left-0 rounded-full bg-violet-500" style={{ width: `${(r.overallBand / 9) * 100}%` }} />
+              <div className="absolute -top-1 h-[18px] w-1 rounded bg-foreground/70" style={{ left: `${(r.targetBand / 9) * 100}%` }} />
             </div>
           </div>
         )}
@@ -208,9 +209,9 @@ function SkillCards({ r, payload }: { r: StudentReport; payload: ReportPayload }
 
 function Insights({ items, className }: { items: string[]; className?: string }) {
   return (
-    <Card className={cn("gap-3 border-amber-200 bg-gradient-to-br from-amber-50 to-rose-50 px-5 py-5 dark:border-amber-900/60 dark:from-amber-950/40 dark:to-rose-950/30", className)}>
+    <Card className={cn("gap-3 px-5 py-5", TONES.amber.tile, className)}>
       <h2 className="flex items-center gap-2 text-[15px] font-semibold">
-        <span className="grid size-7 place-items-center rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-sm">
+        <span className="grid size-7 place-items-center rounded-lg bg-amber-600 text-white shadow-sm">
           <Lightbulb className="size-4" aria-hidden />
         </span>
         Insights

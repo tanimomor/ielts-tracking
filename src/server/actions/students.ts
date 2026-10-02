@@ -7,6 +7,7 @@ import { safeCallbackPath } from "@/lib/redirect";
 import { fieldErrors, studentProfileSchema, type ActionResult } from "@/lib/validation";
 import { db } from "@/server/db";
 import { students } from "@/server/db/schema";
+import { recordActivity } from "@/server/activity";
 import { emailFor } from "@/server/users";
 import { AuthError, authorizeStudent, getStudentForUser, requireUser } from "@/server/session";
 
@@ -53,6 +54,7 @@ export async function updateProfileAction(_prev: ActionResult | null, formData: 
       return { ok: false, error: "Check the highlighted fields.", fieldErrors: fieldErrors(parsed.error) };
     }
     await db.update(students).set(parsed.data).where(eq(students.id, student.id));
+    await recordActivity({ kind: "profile", action: "updated", studentId: student.id, label: parsed.data.name });
     revalidatePath("/", "layout");
     return { ok: true, data: null };
   } catch (e) {

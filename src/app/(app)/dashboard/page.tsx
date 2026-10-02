@@ -6,7 +6,7 @@ import type { PeriodParams } from "@/components/reports/period-picker";
 import { ReportView } from "@/components/reports/report-view";
 import { formatDateTime, today } from "@/lib/dates";
 import { parsePeriod, periodToParams } from "@/lib/reports/period";
-import { latestSnapshot, scopeKeyFor } from "@/server/queries/snapshots";
+import { latestOrCreateSnapshot } from "@/server/reports/store";
 import { listStudents } from "@/server/queries/students";
 import { requireStudent } from "@/server/session";
 
@@ -22,7 +22,7 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
   const requested = typeof params.scope === "string" ? params.scope : student.id;
   const scope = requested === "all" || students.some((s) => s.id === requested) ? requested : student.id;
   const period = parsePeriod(params, date);
-  const snapshot = await latestSnapshot("dashboard", scopeKeyFor("dashboard", scope === "all" ? "all" : [scope]), period);
+  const snapshot = await latestOrCreateSnapshot("dashboard", scope === "all" ? "all" : [scope], period, student.id);
   const syncedBy = snapshot?.generatedBy ? students.find((s) => s.id === snapshot.generatedBy)?.name ?? null : null;
   const scopeName = scope === "all" ? "All students" : students.find((s) => s.id === scope)?.name;
 
@@ -43,8 +43,8 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
         ) : (
           <EmptyState
             icon={RefreshCw}
-            title="No report for this view yet"
-            description="Reports are saved snapshots, so they load instantly and don't change while you look at them. Press Sync & refresh to build one from the latest attempts."
+            title="Couldn't build this report"
+            description="Press Sync & refresh to try again."
             className="py-20"
           />
         )}

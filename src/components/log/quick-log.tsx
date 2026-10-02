@@ -106,9 +106,9 @@ export function QuickLogProvider({ today, series, tagSuggestions, student, child
 export function QuickLogButton({ className, size = "default" }: { className?: string; size?: "default" | "lg" | "sm" }) {
   const { open } = useQuickLog();
   return (
-    <Button onClick={open} size={size} className={cn("bg-brand text-white shadow-md shadow-fuchsia-600/25 hover:brightness-110", className)}>
+    <Button onClick={open} size={size} className={cn("bg-primary text-primary-foreground shadow-sm hover:bg-primary/90", className)}>
       <Plus aria-hidden /> Log practice
-      <kbd className="ml-1 hidden rounded bg-white/20 px-1.5 font-sans text-[10px] font-semibold lg:inline">N</kbd>
+      <kbd className="ml-1 hidden rounded bg-primary-foreground/20 px-1.5 font-sans text-[10px] font-semibold lg:inline">N</kbd>
     </Button>
   );
 }
@@ -121,7 +121,7 @@ export function QuickLogFab() {
       type="button"
       onClick={open}
       aria-label="Log practice"
-      className="fixed right-4 bottom-[calc(5rem+env(safe-area-inset-bottom))] z-40 grid size-14 cursor-pointer place-items-center rounded-full bg-brand text-white shadow-lg shadow-fuchsia-600/30 transition-transform focus-visible:ring-4 focus-visible:ring-ring/40 focus-visible:outline-none active:scale-95 md:hidden"
+      className="fixed right-4 bottom-[calc(5rem+env(safe-area-inset-bottom))] z-40 grid size-14 cursor-pointer place-items-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform focus-visible:ring-4 focus-visible:ring-ring/40 focus-visible:outline-none active:scale-95 md:hidden"
     >
       <Plus className="size-6" aria-hidden />
     </button>

@@ -6,6 +6,7 @@ import type { SeriesInfo } from "@/lib/books";
 import { fieldErrors, seriesInputSchema, seriesUpdateSchema, type ActionResult } from "@/lib/validation";
 import { db } from "@/server/db";
 import { attempts, bookSeries } from "@/server/db/schema";
+import { recordActivity } from "@/server/activity";
 import { AuthError, authorizeStudent } from "@/server/session";
 
 const columns = {
@@ -44,6 +45,7 @@ export async function createSeriesAction(raw: unknown): Promise<ActionResult<Ser
         : { ok: false, error: `${clash.name} already exists.`, fieldErrors: { name: "Already exists" } };
     }
     const [row] = await db.insert(bookSeries).values({ ...parsed.data, createdBy: student.id }).returning(columns);
+    await recordActivity({ kind: "book", action: "created", studentId: student.id, label: row!.name });
     revalidatePath("/", "layout");
     return { ok: true, data: row! };
   });
@@ -52,7 +54,7 @@ export async function createSeriesAction(raw: unknown): Promise<ActionResult<Ser
 /** Name, volume count and tests per book can change; the code prefix can't (existing codes use it). */
 export async function updateSeriesAction(id: number, raw: unknown): Promise<ActionResult<SeriesInfo>> {
   return guarded(async () => {
-    await authorizeStudent();
+    const { student } = await authorizeStudent();
     const parsed = seriesUpdateSchema.safeParse(raw);
     if (!parsed.success) return { ok: false, error: "Check the highlighted fields.", fieldErrors: fieldErrors(parsed.error) };
     const [usage] = await db
@@ -76,6 +78,7 @@ export async function updateSeriesAction(id: number, raw: unknown): Promise<Acti
     if (dup) return { ok: false, error: "Another book has that name.", fieldErrors: { name: "Already exists" } };
     const [row] = await db.update(bookSeries).set(parsed.data).where(eq(bookSeries.id, id)).returning(columns);
     if (!row) return { ok: false, error: "That book doesn't exist." };
+    await recordActivity({ kind: "book", action: "updated", studentId: student.id, label: row.name });
     revalidatePath("/", "layout");
     return { ok: true, data: row };
   });
