@@ -4,6 +4,7 @@ import * as React from "react";
 import { Dialog as SheetPrimitive } from "radix-ui";
 import { XIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { BackButtonClose } from "./use-back-close";
 
 function Sheet(props: React.ComponentProps<typeof SheetPrimitive.Root>) {
   return <SheetPrimitive.Root data-slot="sheet" {...props} />;
@@ -42,6 +43,7 @@ function SheetContent({
         )}
         {...props}
       >
+        <BackButtonClose />
         {children}
         <SheetPrimitive.Close className="absolute top-4 right-4 cursor-pointer rounded-xs opacity-70 transition-opacity hover:opacity-100 focus-visible:ring-[3px] focus-visible:ring-ring/40">
           <XIcon className="size-4" />
