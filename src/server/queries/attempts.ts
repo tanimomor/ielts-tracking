@@ -173,3 +173,36 @@ export async function attemptsForSnapshot(studentIds: string[] | null, range: { 
     .orderBy(desc(attempts.date), desc(attempts.createdAt))
     .limit(20_000);
 }
+
+/** Everyone's attempts on one book / test / part (scoreboard material mode). */
+export async function listMaterialAttempts(
+  m: { book: { seriesId: number; volume: number | null } | null; test: number | null; part: string | null; skill: string | null },
+  range: { from: string; to: string } | null,
+) {
+  const conds: (SQL | undefined)[] = [];
+  if (m.book) {
+    conds.push(eq(attempts.seriesId, m.book.seriesId));
+    if (m.book.volume != null) conds.push(eq(attempts.book, m.book.volume));
+    if (m.test != null) conds.push(eq(attempts.test, m.test));
+  }
+  if (m.part) conds.push(eq(attempts.part, m.part));
+  if (m.skill) conds.push(eq(attempts.skill, m.skill as (typeof attempts.skill.enumValues)[number]));
+  if (range) conds.push(gte(attempts.date, range.from), lte(attempts.date, range.to));
+  return db
+    .select({
+      studentId: attempts.studentId,
+      date: attempts.date,
+      skill: attempts.skill,
+      code: attempts.code,
+      test: attempts.test,
+      part: attempts.part,
+      rawScore: attempts.rawScore,
+      total: attempts.total,
+      percent: attempts.percent,
+      band: attempts.band,
+    })
+    .from(attempts)
+    .where(and(...conds))
+    .orderBy(asc(attempts.date))
+    .limit(5000);
+}
