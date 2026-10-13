@@ -20,6 +20,7 @@ export type RawAggregates = {
     prefix: string;
     book: number | null;
     test: number | null;
+    skill: Skill;
     attempts: number;
     bandSum: number;
     banded: number;
@@ -135,12 +136,14 @@ function buildOne(
 
   const bookMap = new Map<string, StudentReport["books"][number] & { bandSum: number; pctSum: number; pctCount: number; banded: number }>();
   for (const b of pick(raw.books)) {
-    const key = `${b.series}:${b.book ?? ""}:${b.test ?? ""}`;
+    // One row per book, test and skill: Test 1 and Test 2 (or Listening and Reading) never merge.
+    const key = `${b.series}:${b.book ?? ""}:${b.test ?? ""}:${b.skill}`;
     const e = bookMap.get(key) ?? {
       series: b.series,
       prefix: b.prefix,
       book: b.book,
       test: b.test,
+      skill: b.skill,
       attempts: 0,
       avgBand: null,
       avgPercent: null,
@@ -157,11 +160,12 @@ function buildOne(
     bookMap.set(key, e);
   }
   const books = [...bookMap.values()]
-    .map(({ series, prefix, book, test, attempts: n, bandSum, banded, pctSum, pctCount }) => ({
+    .map(({ series, prefix, book, test, skill, attempts: n, bandSum, banded, pctSum, pctCount }) => ({
       series,
       prefix,
       book,
       test,
+      skill,
       attempts: n,
       avgBand: avg(bandSum, banded),
       avgPercent: avg(pctSum, pctCount),
@@ -171,7 +175,8 @@ function buildOne(
         Number(b.prefix === "c") - Number(a.prefix === "c") ||
         (a.series ?? "").localeCompare(b.series ?? "") ||
         (b.book ?? 0) - (a.book ?? 0) ||
-        (a.test ?? 0) - (b.test ?? 0),
+        (a.test ?? 0) - (b.test ?? 0) ||
+        SKILLS.indexOf(a.skill ?? "other") - SKILLS.indexOf(b.skill ?? "other"),
     );
 
   const tagMap = new Map<string, number>();

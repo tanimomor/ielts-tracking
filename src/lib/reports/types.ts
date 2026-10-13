@@ -44,6 +44,8 @@ export type StudentReport = {
     prefix?: string;
     book: number | null;
     test: number | null;
+    /** Missing in snapshots saved before books were split by skill. */
+    skill?: Skill;
     attempts: number;
     avgBand: number | null;
     avgPercent: number | null;

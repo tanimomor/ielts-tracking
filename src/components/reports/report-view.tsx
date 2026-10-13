@@ -270,21 +270,20 @@ function Charts({ r, payload }: { r: StudentReport; payload: ReportPayload }) {
     }))
     .filter((d) => d.listening != null || d.reading != null);
 
-  // One bar per book (series + volume), averaged over its tests.
-  const byBook = new Map<string, { label: string; band: number[] }>();
+  // One bar per book + test (Test 1 and Test 2 never merge), averaged over its skills.
+  // Newest volumes first, capped so the bars stay readable; the table lists everything.
+  const byTest = new Map<string, { label: string; band: number[] }>();
   for (const b of r.books) {
+    if (b.avgBand == null) continue;
     const prefix = (b.prefix ?? "c").toUpperCase();
-    const key = `${b.series ?? "Cambridge"}:${b.book ?? ""}`;
-    const e = byBook.get(key) ?? { label: `${prefix}${b.book ?? ""}`, band: [] };
-    if (b.avgBand != null) e.band.push(b.avgBand);
-    byBook.set(key, e);
+    const key = `${b.series ?? "Cambridge"}:${b.book ?? ""}:${b.test ?? ""}`;
+    const e = byTest.get(key) ?? { label: `${prefix}${b.book ?? ""}${b.test != null ? ` T${b.test}` : ""}`, band: [] };
+    e.band.push(b.avgBand);
+    byTest.set(key, e);
   }
-  const bookBars = [...byBook.values()]
-    .map((e) => ({
-      book: e.label,
-      band: e.band.length ? Math.round((e.band.reduce((x, y) => x + y, 0) / e.band.length) * 100) / 100 : null,
-    }))
-    .filter((b) => b.band != null)
+  const bookBars = [...byTest.values()]
+    .slice(0, 12)
+    .map((e) => ({ book: e.label, band: Math.round((e.band.reduce((x, y) => x + y, 0) / e.band.length) * 100) / 100 }))
     .reverse();
 
   return (
@@ -395,7 +394,7 @@ function Charts({ r, payload }: { r: StudentReport; payload: ReportPayload }) {
         </ChartCard>
       </div>
 
-      <ChartCard title="By book" description="Average band per book (full L/R tests and W/S)">
+      <ChartCard title="By book" description="Average band per book and test (full L/R tests and W/S)">
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
           {bookBars.length ? (
             <BarSeriesChart
@@ -421,10 +420,11 @@ function Charts({ r, payload }: { r: StudentReport; payload: ReportPayload }) {
               <tbody>
                 {r.books.length ? (
                   r.books.map((b) => (
-                    <tr key={`${b.series}-${b.book}-${b.test}`} className="border-t">
+                    <tr key={`${b.series}-${b.book}-${b.test}-${b.skill}`} className="border-t">
                       <td className="px-3 py-1.5 font-medium">
                         {bookName({ name: b.series ?? "Cambridge" }, b.book)}
                         {b.test != null && <span className="text-muted-foreground"> · Test {b.test}</span>}
+                        {b.skill && <span className="text-muted-foreground"> · {SKILL_LABELS[b.skill]}</span>}
                       </td>
                       <td className="px-3 py-1.5 text-right tabular">{b.attempts}</td>
                       <td className="px-3 py-1.5 text-right tabular">{b.avgPercent != null ? `${Math.round(b.avgPercent)}%` : "—"}</td>

@@ -145,6 +145,29 @@ describe("assembleReport", () => {
     expect(p.students[1].insights.some((s) => s.includes("Writing and Speaking haven't been logged yet"))).toBe(true);
   });
 
+  it("keeps each test and skill of a book separate", () => {
+    const book = (studentId: string, test: number, skill: Skill, band: number) => ({
+      studentId,
+      series: "Cambridge",
+      prefix: "c",
+      book: 9,
+      test,
+      skill,
+      attempts: 1,
+      bandSum: band,
+      banded: 1,
+      pctSum: 0,
+      pctCount: 0,
+    });
+    const books = [book("a", 2, "listening", 7.5), book("a", 1, "listening", 7), book("a", 1, "reading", 6), book("b", 1, "listening", 8)];
+    const r = assembleReport(raw({ books }), [A, B], "all", period, TODAY).combined;
+    expect(r.books.map((b) => [b.test, b.skill, b.attempts, b.avgBand])).toEqual([
+      [1, "listening", 2, 7.5],
+      [1, "reading", 1, 6],
+      [2, "listening", 1, 7.5],
+    ]);
+  });
+
   it("handles an empty period", () => {
     const r = assembleReport(raw(), [A], "students", period, TODAY).combined;
     expect(r.attempts).toBe(0);
